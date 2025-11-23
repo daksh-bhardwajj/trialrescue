@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { ReactNode } from "react";
+import { Analytics } from "@vercel/analytics/next"
 
 export const metadata: Metadata = {
   title: "TrialRescue – Save your leaking SaaS trials",

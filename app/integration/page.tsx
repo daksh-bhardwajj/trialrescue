@@ -107,7 +107,7 @@ export default function IntegrationPage() {
   }
 
   const curlExample = apiKey
-    ? `curl -X POST https://your-trialrescue-domain.com/api/events \\
+    ? `curl -X POST https://trialrescue.vercel.app/api/events \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer ${apiKey}" \\
   -d '{
@@ -118,7 +118,7 @@ export default function IntegrationPage() {
     : "Loading…";
 
   const jsExample = apiKey
-    ? `await fetch("https://your-trialrescue-domain.com/api/events", {
+    ? `await fetch("https://trialrescue.vercel.app/api/events", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
@@ -136,7 +136,7 @@ export default function IntegrationPage() {
     ? `import requests
 
 requests.post(
-    "https://your-trialrescue-domain.com/api/events",
+    "https://trialrescue.vercel.app/api/events",
     headers={
         "Content-Type": "application/json",
         "Authorization": "Bearer ${apiKey}",
@@ -152,7 +152,7 @@ requests.post(
   const phpExample = apiKey
     ? `<?php
 
-$ch = curl_init("https://your-trialrescue-domain.com/api/events");
+$ch = curl_init("https://trialrescue.vercel.app/api/events");
 curl_setopt_array($ch, [
     CURLOPT_POST => true,
     CURLOPT_RETURNTRANSFER => true,
