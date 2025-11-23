@@ -15,6 +15,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <div className="flex min-h-screen">
           {children}
         </div>
+        <Analytics />
       </body>
     </html>
   );
