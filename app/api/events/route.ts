@@ -1,131 +1,73 @@
-/* eslint-disable prefer-const */
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-const DEFAULT_PROJECT_ID = process.env.DEFAULT_PROJECT_ID!;
+// CORS headers
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*", // for testing only — later change to founder domains
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
 
-const eventSchema = z.object({
-  event_type: z.enum(["user_signed_up", "user_activity", "user_upgraded"]),
-  external_user_id: z.string().min(1),
-  email: z.string().email().optional(), // only required for signup
-  timestamp: z.string().datetime().optional(), // ISO string
-  data: z.record(z.string(), z.any()).optional(),
-});
+export async function OPTIONS() {
+  return NextResponse.json({}, { headers: corsHeaders });
+}
 
 export async function POST(req: NextRequest) {
-  const auth = req.headers.get("authorization");
-if (!auth || !auth.startsWith("Bearer ")) {
-  return NextResponse.json({ error: "Missing API key" }, { status: 401 });
-}
-const apiKey = auth.replace("Bearer ", "").trim();
-
-const projectRes = await supabaseAdmin
-  .from("projects")
-  .select("id")
-  .eq("api_key", apiKey)
-  .single();
-
-if (projectRes.error || !projectRes.data) {
-  return NextResponse.json({ error: "Invalid API key" }, { status: 401 });
-}
-
-const projectId = projectRes.data.id;
-
   try {
-    const json = await req.json();
-    const parseResult = eventSchema.safeParse(json);
+    const auth = req.headers.get("authorization");
+    if (!auth || !auth.startsWith("Bearer "))
+      return NextResponse.json({ error: "Missing API key" }, { status: 401, headers: corsHeaders });
 
-    if (!parseResult.success) {
-      return NextResponse.json(
-        { error: "Invalid payload", details: parseResult.error.format() },
-        { status: 400 }
-      );
-    }
+    const apiKey = auth.split(" ")[1];
 
-    const { event_type, external_user_id, email, timestamp, data } = parseResult.data;
-    const eventTime = timestamp ? new Date(timestamp).toISOString() : new Date().toISOString();
+    const { data: project, error: keyErr } = await supabaseAdmin
+      .from("projects")
+      .select("id")
+      .eq("api_key", apiKey)
+      .single();
+    if (keyErr || !project)
+      return NextResponse.json({ error: "Invalid API key" }, { status: 401, headers: corsHeaders });
 
-    // Ensure the user exists (or create)
-    // For activity/upgrade, user must already exist from a prior signup
-    let userRes = await supabaseAdmin
-      .from("project_users")
-      .select("*")
-      .eq("project_id", projectId)
-      .eq("external_user_id", external_user_id)
-      .maybeSingle();
+    const body = await req.json().catch(() => null);
+    if (!body || !body.event_type)
+      return NextResponse.json({ error: "Missing event_type" }, { status: 400, headers: corsHeaders });
 
-    let user = userRes.data;
-    const userError = userRes.error;
+    const { event_type, external_user_id, email, data } = body;
 
-    if (userError) {
-      console.error("Error fetching project_user", userError);
-      return NextResponse.json({ error: "Database error" }, { status: 500 });
-    }
-
-    if (!user && event_type === "user_signed_up") {
-      if (!email) {
-        return NextResponse.json(
-          { error: "email is required for user_signed_up" },
-          { status: 400 }
-        );
-      }
-
-      const insertRes = await supabaseAdmin
-        .from("project_users")
-        .insert({
-          project_id: projectId,
-          external_user_id,
-          email,
-          trial_started_at: eventTime,
-        })
-        .select("*")
-        .single();
-
-      if (insertRes.error) {
-        console.error("Error creating project_user", insertRes.error);
-        return NextResponse.json({ error: "Database error" }, { status: 500 });
-      }
-
-      user = insertRes.data;
-    }
-
-    if (!user && event_type !== "user_signed_up") {
-      return NextResponse.json(
-        { error: "Unknown user. Must send user_signed_up first." },
-        { status: 400 }
-      );
-    }
-
-    // For upgrades, mark upgraded_at on the user
-    if (event_type === "user_upgraded" && user) {
-      const updateRes = await supabaseAdmin
-        .from("project_users")
-        .update({ upgraded_at: eventTime })
-        .eq("id", user.id);
-
-      if (updateRes.error) {
-        console.error("Error updating upgraded_at", updateRes.error);
-      }
-    }
-
-    // Insert into events table
-    const insertEventRes = await supabaseAdmin.from("events").insert({
-      project_id: projectId,
-      user_id: user!.id,
+    await supabaseAdmin.from("events").insert({
+      project_id: project.id,
       event_type,
-      created_at: eventTime,
-      data: data ?? {},
+      external_user_id,
+      data,
     });
 
-    if (insertEventRes.error) {
-      console.error("Error inserting event", insertEventRes.error);
-      return NextResponse.json({ error: "Database error" }, { status: 500 });
+    if (event_type === "user_signed_up" && external_user_id && email) {
+      await supabaseAdmin.from("project_users").upsert({
+        project_id: project.id,
+        external_user_id,
+        email,
+        trial_started_at: new Date().toISOString(),
+        last_activity_at: new Date().toISOString(),
+      });
     }
 
-    return NextResponse.json({ ok: true });
+    if (event_type === "user_activity" && external_user_id) {
+      await supabaseAdmin.rpc("update_last_activity", {
+        p_project_id: project.id,
+        p_external_user_id: external_user_id,
+      });
+    }
+
+    if (event_type === "user_upgraded" && external_user_id) {
+      await supabaseAdmin.rpc("mark_upgraded", {
+        p_project_id: project.id,
+        p_external_user_id: external_user_id,
+      });
+    }
+
+    return NextResponse.json({ ok: true }, { headers: corsHeaders });
   } catch (err) {
-    console.error("Unexpected error in /api/events", err);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    console.error("events error", err);
+    return NextResponse.json({ error: "Server error" }, { status: 500, headers: corsHeaders });
   }
 }

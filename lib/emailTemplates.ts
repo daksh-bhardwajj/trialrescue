@@ -1,61 +1,104 @@
 // lib/emailTemplates.ts
 
-export type NudgeType = "nudge1" | "nudge2" | "nudge3";
+export type NudgeKind = "nudge1" | "nudge2" | "nudge3";
 
-export function getNudgeSubject(nudge: NudgeType) {
+export function getNudgeSubject(nudge: NudgeKind, productName: string) {
+  const name = productName || "your product";
+
   switch (nudge) {
     case "nudge1":
-      return "Still want to try your account?";
+      return `Still on your ${name} trial?`;
     case "nudge2":
-      return "Quick reminder before your trial goes cold";
+      return `Your ${name} trial is idling`;
     case "nudge3":
-      return "Last chance before we close your trial";
+      return `Before your ${name} trial fully goes cold…`;
     default:
-      return "Checking in on your trial";
+      return `${name} trial reminder`;
   }
 }
 
-export function getNudgeBodyHtml(nudge: NudgeType) {
-  const intro =
-    nudge === "nudge1"
-      ? "You signed up recently but haven’t really had a chance to try things out yet."
-      : nudge === "nudge2"
-      ? "We’ve noticed your account has been quiet — most people who see value run at least one or two key actions."
-      : "We’re about to close out your trial. If you still want to experiment, this is your last nudge.";
+export function getNudgeBodyHtml(
+  nudge: NudgeKind,
+  productName: string
+): string {
+  const name = productName || "your product";
+
+  let intro: string;
+  if (nudge === "nudge1") {
+    intro = `You started a trial with <strong>${name}</strong>, but you haven’t really used it yet.`;
+  } else if (nudge === "nudge2") {
+    intro = `Your <strong>${name}</strong> trial is sitting there without much action.`;
+  } else {
+    intro = `Your trial with <strong>${name}</strong> is about to fade out completely.`;
+  }
 
   return `
-  <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background-color: #020617; color: #e5e7eb; padding: 24px;">
-    <div style="max-width: 520px; margin: 0 auto; background: radial-gradient(circle at top left, #0f172a, #020617); border-radius: 16px; border: 1px solid #1f2937; padding: 24px;">
-      <h1 style="font-size: 20px; margin-bottom: 8px; color: #f9fafb;">Your trial is idling</h1>
-      <p style="font-size: 14px; line-height: 1.6; color: #9ca3af; margin-bottom: 16px;">
+  <div style="background-color: #020617; padding: 24px; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; color: #e5e7eb;">
+    <div style="max-width: 520px; margin: 0 auto; border-radius: 18px; border: 1px solid #1f2937; background: radial-gradient(circle at top left, #0f172a 0, #020617 55%); padding: 20px 20px 24px;">
+      <div style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #64748b; margin-bottom: 8px;">
+        TrialRescue · for ${name}
+      </div>
+      <h1 style="font-size: 18px; line-height: 1.4; color: #f9fafb; margin: 0 0 10px;">
+        Don’t let your ${name} trial go cold
+      </h1>
+      <p style="font-size: 14px; line-height: 1.7; color: #cbd5f5; margin: 0 0 10px;">
         ${intro}
       </p>
-      <p style="font-size: 14px; line-height: 1.6; color: #9ca3af; margin-bottom: 16px;">
-        Log back in, run one meaningful action, and see if this is worth keeping before you forget about it completely.
+      <p style="font-size: 13px; line-height: 1.7; color: #9ca3af; margin: 0 0 12px;">
+        Most trials quietly die because people get busy, not because the product is bad. 
+        Take 5 minutes to jump back in, run one meaningful action, and see if ${name} is worth keeping.
       </p>
-      <a href="{{APP_URL}}" style="display: inline-block; font-size: 14px; padding: 8px 16px; border-radius: 9999px; background-color: #06b6d4; color: #020617; text-decoration: none; font-weight: 600;">
-        Open my trial
+      <p style="font-size: 13px; line-height: 1.7; color: #9ca3af; margin: 0 0 20px;">
+        When you’re ready, click below to go straight back into your ${name} workspace.
+      </p>
+
+      <a href="{{APP_URL}}" style="
+        display: inline-block;
+        font-size: 14px;
+        padding: 9px 18px;
+        border-radius: 9999px;
+        background-color: #06b6d4;
+        color: #020617;
+        text-decoration: none;
+        font-weight: 600;
+      ">
+        Open my ${name} trial
       </a>
+
+      <p style="font-size: 11px; line-height: 1.7; color: #6b7280; margin-top: 24px;">
+        This reminder was sent automatically on behalf of <strong>${name}</strong> 
+        because you started a trial and haven’t been active recently.
+      </p>
     </div>
   </div>
   `;
 }
 
-export function getNudgeBodyText(nudge: NudgeType) {
-  const intro =
-    nudge === "nudge1"
-      ? "You signed up recently but haven’t really had a chance to try things out yet."
-      : nudge === "nudge2"
-      ? "We’ve noticed your account has been quiet — most people who see value run at least one or two key actions."
-      : "We’re about to close out your trial. If you still want to experiment, this is your last nudge.";
+export function getNudgeBodyText(
+  nudge: NudgeKind,
+  productName: string
+): string {
+  const name = productName || "your product";
+
+  let intro: string;
+  if (nudge === "nudge1") {
+    intro = `You started a trial with ${name}, but you haven’t really used it yet.`;
+  } else if (nudge === "nudge2") {
+    intro = `Your ${name} trial is sitting there without much action.`;
+  } else {
+    intro = `Your trial with ${name} is about to fade out completely.`;
+  }
 
   return `
-Your trial is idling.
+Don’t let your ${name} trial go cold.
 
 ${intro}
 
-Log back in, run one meaningful action, and see if this is worth keeping before you forget about it completely.
+Most trials quietly die because people get busy, not because the product is bad.
+Take 5 minutes to jump back in, run one meaningful action, and see if ${name} is worth keeping.
 
 Open my trial: {{APP_URL}}
+
+This reminder was sent automatically on behalf of ${name} because you started a trial and haven’t been active recently.
 `;
 }
