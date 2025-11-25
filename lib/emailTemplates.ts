@@ -33,42 +33,97 @@ export function getNudgeBodyHtml(
   }
 
   return `
-  <div style="background-color: #020617; padding: 24px; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; color: #e5e7eb;">
-    <div style="max-width: 520px; margin: 0 auto; border-radius: 18px; border: 1px solid #1f2937; background: radial-gradient(circle at top left, #0f172a 0, #020617 55%); padding: 20px 20px 24px;">
-      <div style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #64748b; margin-bottom: 8px;">
-        TrialRescue · for ${name}
+<div style="background-color: #000000; padding: 48px 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #e4e4e7;">
+    
+    <div style="
+      max-width: 480px; 
+      margin: 0 auto; 
+      background-color: #09090b; 
+      border: 1px solid #27272a; 
+      border-radius: 24px; 
+      padding: 40px 32px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+    ">
+      
+      <div style="margin-bottom: 24px;">
+        <span style="
+          font-size: 10px; 
+          font-weight: 700; 
+          letter-spacing: 0.2em; 
+          text-transform: uppercase; 
+          color: #71717a; 
+          border: 1px solid #27272a; 
+          padding: 6px 12px; 
+          border-radius: 100px;
+          background-color: #18181b;
+        ">
+          TrialRescue &middot; ${name}
+        </span>
       </div>
-      <h1 style="font-size: 18px; line-height: 1.4; color: #f9fafb; margin: 0 0 10px;">
-        Don’t let your ${name} trial go cold
+
+      <h1 style="
+        font-size: 24px; 
+        line-height: 1.3; 
+        font-weight: 700; 
+        color: #ffffff; 
+        margin: 0 0 16px;
+        letter-spacing: -0.02em;
+      ">
+        Don’t let your ${name}<br/>trial go cold.
       </h1>
-      <p style="font-size: 14px; line-height: 1.7; color: #cbd5f5; margin: 0 0 10px;">
+
+      <p style="
+        font-size: 15px; 
+        line-height: 1.6; 
+        color: #d4d4d8; 
+        margin: 0 0 20px;
+      ">
         ${intro}
       </p>
-      <p style="font-size: 13px; line-height: 1.7; color: #9ca3af; margin: 0 0 12px;">
-        Most trials quietly die because people get busy, not because the product is bad. 
-        Take 5 minutes to jump back in, run one meaningful action, and see if ${name} is worth keeping.
-      </p>
-      <p style="font-size: 13px; line-height: 1.7; color: #9ca3af; margin: 0 0 20px;">
-        When you’re ready, click below to go straight back into your ${name} workspace.
-      </p>
 
-      <a href="{{APP_URL}}" style="
-        display: inline-block;
-        font-size: 14px;
-        padding: 9px 18px;
-        border-radius: 9999px;
-        background-color: #06b6d4;
-        color: #020617;
-        text-decoration: none;
-        font-weight: 600;
+      <p style="
+        font-size: 14px; 
+        line-height: 1.6; 
+        color: #a1a1aa; 
+        margin: 0 0 32px;
       ">
-        Open my ${name} trial
-      </a>
-
-      <p style="font-size: 11px; line-height: 1.7; color: #6b7280; margin-top: 24px;">
-        This reminder was sent automatically on behalf of <strong>${name}</strong> 
-        because you started a trial and haven’t been active recently.
+        Most trials quietly die because people get busy, not because the product lacks value. Take 5 minutes to jump back in and run one meaningful action.
       </p>
+
+      <div style="margin-bottom: 32px;">
+        <a href="{{APP_URL}}" style="
+          display: inline-block;
+          background-color: #ffffff;
+          color: #000000;
+          font-size: 14px;
+          font-weight: 600;
+          text-decoration: none;
+          padding: 14px 28px;
+          border-radius: 100px;
+          text-align: center;
+          box-shadow: 0 0 15px rgba(255,255,255,0.15);
+        ">
+          Open my ${name} trial &rarr;
+        </a>
+      </div>
+
+      <div style="height: 1px; background-color: #27272a; margin-bottom: 24px;"></div>
+
+      <p style="
+        font-size: 11px; 
+        line-height: 1.5; 
+        color: #52525b; 
+        margin: 0;
+      ">
+        This automated reminder was sent on behalf of <strong style="color: #a1a1aa;">${name}</strong> via TrialRescue because your trial activity has paused.
+      </p>
+      
+    </div>
+    
+    <div style="text-align: center; margin-top: 24px;">
+       <p style="font-size: 10px; color: #3f3f46; letter-spacing: 0.05em;">
+         POWERED BY TRIALRESCUE
+       </p>
     </div>
   </div>
   `;
