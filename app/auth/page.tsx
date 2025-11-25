@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 import { 
   Loader2, 
@@ -10,7 +11,9 @@ import {
   ArrowRight, 
   Mail, 
   Lock, 
-  Briefcase 
+  Briefcase,
+  ChevronLeft,
+  Sparkles
 } from "lucide-react";
 
 export default function AuthPage() {
@@ -57,51 +60,69 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center bg-[#050505] px-4 font-sans selection:bg-white/20">
+    <div className="relative flex min-h-screen w-full items-center justify-center bg-black px-4 font-sans selection:bg-white/20 overflow-hidden">
       
-      {/* Background Grid & Ambient Glow */}
-      <div className="pointer-events-none fixed inset-0 z-0 flex justify-center opacity-[0.15]">
-        <div className="h-full w-full bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+      {/* Ambient Background & Noise */}
+      <div className="pointer-events-none fixed inset-0 z-0">
+          <div className="absolute top-[-20%] left-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-500/[0.04] blur-[120px]" />
+          <div className="absolute bottom-[-20%] right-[-10%] h-[500px] w-[500px] rounded-full bg-emerald-500/[0.04] blur-[120px]" />
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
       </div>
-      <div className="absolute inset-0 z-0 bg-gradient-to-tr from-emerald-500/[0.03] via-transparent to-blue-500/[0.03] pointer-events-none" />
+
+      {/* Navigation (Back Button) */}
+      <div className="absolute top-6 left-6 z-20 md:top-10 md:left-10">
+        <Link 
+          href="/" 
+          className="group flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-4 py-2 text-[13px] font-medium text-zinc-400 backdrop-blur-md transition-all hover:bg-white/10 hover:text-white hover:pl-3 hover:pr-5"
+        >
+          <ChevronLeft size={16} className="transition-transform group-hover:-translate-x-0.5" />
+          Back to Home
+        </Link>
+      </div>
 
       {/* Main Card */}
-      <div className="relative z-10 w-full max-w-[400px] animate-in fade-in zoom-in-95 duration-500">
+      <div className="relative z-10 w-full max-w-[420px] animate-in fade-in zoom-in-95 duration-700">
         
         {/* Brand Header */}
         <div className="mb-8 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.03] border border-white/[0.08] shadow-xl backdrop-blur-md">
-            <Zap size={20} className="text-white fill-white/20" />
+          <div className="relative mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.01] border border-white/[0.08] shadow-2xl backdrop-blur-xl">
+             <div className="absolute inset-0 bg-white/5 blur-xl rounded-full" />
+             <Zap size={28} className="relative z-10 text-white fill-white/20" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
-            {mode === "signup" ? "Create your account" : "Welcome back"}
+          <h1 className="text-3xl font-bold tracking-tight text-white">
+            {mode === "signup" ? "Create Account" : "Welcome Back"}
           </h1>
-          <p className="mt-2 text-[13px] text-zinc-400 max-w-[280px]">
+          <p className="mt-3 text-[14px] text-zinc-400 max-w-[300px] leading-relaxed">
             {mode === "signup"
-              ? "Start recovering lost trials automatically. No credit card required."
-              : "Sign in to view your dashboard and performance metrics."}
+              ? "Automate your customer recovery. No credit card required."
+              : "Access your dashboard to view recovery metrics."}
           </p>
         </div>
 
         {/* Form Container */}
-        <div className="rounded-2xl border border-white/[0.08] bg-[#0A0A0A]/50 p-6 backdrop-blur-xl shadow-2xl ring-1 ring-white/[0.02]">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="rounded-[32px] border border-white/[0.08] bg-[#0A0A0A]/60 p-8 backdrop-blur-2xl shadow-2xl ring-1 ring-white/[0.02]">
+          <form onSubmit={handleSubmit} className="space-y-5">
             
-            {/* Project Name (Signup Only) */}
-            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${mode === "signup" ? "max-h-24 opacity-100" : "max-h-0 opacity-0"}`}>
-               <div className="relative group">
-                 <input
-                   type="text"
-                   className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 pl-10 text-sm text-white placeholder:text-zinc-600 outline-none transition-all focus:border-white/20 focus:bg-white/[0.02] focus:ring-1 focus:ring-white/20"
-                   value={projectName}
-                   onChange={(e) => setProjectName(e.target.value)}
-                   placeholder="Project Name"
-                 />
-                 <Briefcase size={16} className="absolute left-3.5 top-3.5 text-zinc-600 transition-colors group-focus-within:text-zinc-400" />
+            {/* Project Name (Signup Only) - Animated Collapse */}
+            <div className={`overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${mode === "signup" ? "max-h-24 opacity-100" : "max-h-0 opacity-0"}`}>
+               <div className="space-y-2">
+                   <div className="relative group">
+                     <input
+                       type="text"
+                       className="peer w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3.5 pl-11 text-sm text-white placeholder:text-zinc-600 outline-none transition-all focus:border-white/20 focus:bg-white/[0.03] focus:ring-1 focus:ring-white/20"
+                       value={projectName}
+                       onChange={(e) => setProjectName(e.target.value)}
+                       placeholder="Project Name"
+                     />
+                     <Briefcase size={18} className="absolute left-4 top-3.5 text-zinc-600 transition-colors peer-focus:text-zinc-300" />
+                   </div>
+                   <div className="flex items-center gap-1.5 px-2">
+                      <Sparkles size={10} className="text-zinc-600" />
+                      <p className="text-[10px] font-medium text-zinc-500 uppercase tracking-wide">
+                        Workspace Name
+                      </p>
+                   </div>
                </div>
-               <p className="mt-1.5 px-1 text-[10px] text-zinc-500">
-                 *Your default project name (cosmetic only).
-               </p>
             </div>
 
             {/* Email */}
@@ -109,12 +130,12 @@ export default function AuthPage() {
               <input
                 type="email"
                 required
-                className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 pl-10 text-sm text-white placeholder:text-zinc-600 outline-none transition-all focus:border-white/20 focus:bg-white/[0.02] focus:ring-1 focus:ring-white/20"
+                className="peer w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3.5 pl-11 text-sm text-white placeholder:text-zinc-600 outline-none transition-all focus:border-white/20 focus:bg-white/[0.03] focus:ring-1 focus:ring-white/20"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@company.com"
               />
-              <Mail size={16} className="absolute left-3.5 top-3.5 text-zinc-600 transition-colors group-focus-within:text-zinc-400" />
+              <Mail size={18} className="absolute left-4 top-3.5 text-zinc-600 transition-colors peer-focus:text-zinc-300" />
             </div>
 
             {/* Password */}
@@ -122,17 +143,18 @@ export default function AuthPage() {
               <input
                 type="password"
                 required
-                className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 pl-10 text-sm text-white placeholder:text-zinc-600 outline-none transition-all focus:border-white/20 focus:bg-white/[0.02] focus:ring-1 focus:ring-white/20"
+                className="peer w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3.5 pl-11 text-sm text-white placeholder:text-zinc-600 outline-none transition-all focus:border-white/20 focus:bg-white/[0.03] focus:ring-1 focus:ring-white/20"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
               />
-              <Lock size={16} className="absolute left-3.5 top-3.5 text-zinc-600 transition-colors group-focus-within:text-zinc-400" />
+              <Lock size={18} className="absolute left-4 top-3.5 text-zinc-600 transition-colors peer-focus:text-zinc-300" />
             </div>
 
             {/* Error Message */}
             {error && (
-              <div className="animate-in fade-in slide-in-from-top-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-[12px] text-red-200">
+              <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-[12px] font-medium text-red-200 animate-in fade-in slide-in-from-top-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse" />
                 {error}
               </div>
             )}
@@ -141,7 +163,7 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={loading}
-              className="group relative flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 text-sm font-semibold text-black transition-all hover:bg-zinc-200 hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] active:scale-95 disabled:opacity-70 disabled:active:scale-100"
+              className="group relative flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-3.5 text-[13px] font-bold text-black transition-all hover:bg-zinc-200 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] active:scale-[0.98] disabled:opacity-70 disabled:hover:scale-100"
             >
               {loading ? (
                 <Loader2 size={18} className="animate-spin text-zinc-600" />
@@ -155,13 +177,13 @@ export default function AuthPage() {
           </form>
 
           {/* Toggle Mode */}
-          <div className="mt-6 border-t border-white/[0.06] pt-4 text-center">
-             <p className="text-[12px] text-zinc-500">
+          <div className="mt-8 border-t border-white/[0.06] pt-6 text-center">
+             <p className="text-[13px] text-zinc-500">
                 {mode === "signup" ? "Already have an account?" : "Don't have an account yet?"}{" "}
                 <button
                   type="button"
                   onClick={() => setMode(mode === "signup" ? "login" : "signup")}
-                  className="font-medium text-white underline decoration-zinc-700 underline-offset-4 transition-colors hover:decoration-white"
+                  className="font-medium text-white transition-all hover:text-zinc-300 hover:underline underline-offset-4 decoration-zinc-700"
                 >
                    {mode === "signup" ? "Log in" : "Sign up"}
                 </button>
@@ -170,10 +192,10 @@ export default function AuthPage() {
         </div>
         
         {/* Footer Info */}
-        <div className="mt-8 flex justify-center gap-6 text-[11px] text-zinc-600">
-           <span className="hover:text-zinc-400 cursor-pointer transition-colors">Privacy</span>
-           <span className="hover:text-zinc-400 cursor-pointer transition-colors">Terms</span>
-           <span className="hover:text-zinc-400 cursor-pointer transition-colors">Help</span>
+        <div className="mt-8 flex justify-center gap-8 text-[11px] font-medium text-zinc-600">
+           <span className="hover:text-zinc-400 cursor-pointer transition-colors">Privacy Policy</span>
+           <span className="hover:text-zinc-400 cursor-pointer transition-colors">Terms of Service</span>
+           <span className="hover:text-zinc-400 cursor-pointer transition-colors">Help Center</span>
         </div>
 
       </div>

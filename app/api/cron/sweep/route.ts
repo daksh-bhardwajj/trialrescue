@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // app/api/cron/sweep/route.ts
 
 import { NextRequest, NextResponse } from "next/server";

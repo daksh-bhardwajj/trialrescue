@@ -16,7 +16,9 @@ import {
   BarChart3,
   Users,
   ArrowUpRight,
-  Layers
+  Layers,
+  CheckCircle2,
+  Sparkles
 } from "lucide-react";
 
 // --- Types ---
@@ -28,7 +30,7 @@ type DashboardSummary = {
 
 // --- UI Components ---
 
-function SidebarItem({
+function NavItem({
   href,
   icon: Icon,
   label,
@@ -42,19 +44,23 @@ function SidebarItem({
   return (
     <Link
       href={href}
-      className={`group flex items-center gap-3 rounded-md px-3 py-2 text-[13px] font-medium transition-all duration-200 ease-in-out ${
+      className={`group relative flex items-center gap-3.5 rounded-2xl px-4 py-3 text-[13px] font-medium transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
         isActive
-          ? "bg-white/10 text-white shadow-[0_1px_0_0_rgba(255,255,255,0.1)_inset]"
-          : "text-zinc-500 hover:bg-white/5 hover:text-zinc-200"
+          ? "bg-white/[0.08] text-white shadow-[0_0_20px_rgba(255,255,255,0.05)]"
+          : "text-zinc-500 hover:bg-white/[0.03] hover:text-zinc-200"
       }`}
     >
+      {isActive && (
+        <div className="absolute left-0 h-6 w-1 rounded-r-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
+      )}
       <Icon
-        size={16}
-        className={`transition-colors ${
-          isActive ? "text-white" : "text-zinc-600 group-hover:text-zinc-300"
+        size={18}
+        strokeWidth={2}
+        className={`transition-transform duration-300 ${
+          isActive ? "scale-110 text-white" : "text-zinc-600 group-hover:scale-105 group-hover:text-zinc-400"
         }`}
       />
-      {label}
+      <span className="relative z-10">{label}</span>
     </Link>
   );
 }
@@ -65,38 +71,47 @@ function StatCard({
   helper,
   loading,
   icon: Icon,
+  index,
 }: {
   label: string;
   value: string;
   helper?: string;
   loading?: boolean;
   icon?: any;
+  index: number;
 }) {
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 shadow-sm transition-all duration-300 hover:border-white/[0.15] hover:bg-white/[0.04] hover:shadow-md">
-      {/* Gradient Glow Effect on Hover */}
-      <div className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-500 group-hover:opacity-100">
-        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.05] via-transparent to-transparent" />
-      </div>
-
-      <div className="relative z-10 flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <span className="text-[13px] font-medium text-zinc-400 group-hover:text-zinc-300 transition-colors">
-            {label}
-          </span>
-          {Icon && <Icon size={16} className="text-zinc-600 group-hover:text-zinc-400 transition-colors" />}
+    <div 
+      className="group relative overflow-hidden rounded-[24px] border border-white/[0.06] bg-[#121212]/40 p-6 backdrop-blur-xl transition-all duration-500 ease-out hover:scale-[1.02] hover:bg-[#121212]/60 hover:shadow-2xl"
+      style={{ animationDelay: `${index * 100}ms` }}
+    >
+      {/* Dynamic Background Glow */}
+      <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/[0.02] blur-[50px] transition-all duration-700 group-hover:bg-white/[0.05]" />
+      
+      <div className="relative z-10 flex flex-col justify-between h-full gap-6">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-2.5">
+             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.05] border border-white/[0.05] shadow-inner text-zinc-400 transition-colors group-hover:text-white">
+                <Icon size={14} />
+             </div>
+             <span className="text-[13px] font-semibold text-zinc-400 group-hover:text-zinc-200 transition-colors">
+                {label}
+             </span>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div>
           {loading ? (
-            <div className="h-8 w-24 animate-pulse rounded bg-white/10" />
+            <div className="h-9 w-24 animate-pulse rounded-lg bg-white/[0.08]" />
           ) : (
-            <div className="text-3xl font-semibold tracking-tight text-white">
-              {value}
+            <div className="flex items-baseline gap-1">
+                <div className="text-4xl font-bold tracking-tight text-white drop-shadow-sm">
+                  {value}
+                </div>
             </div>
           )}
           {helper && (
-            <div className="text-[12px] text-zinc-600 group-hover:text-zinc-500 transition-colors">
+            <div className="mt-2 text-[12px] font-medium leading-relaxed text-zinc-600 transition-colors group-hover:text-zinc-500">
               {helper}
             </div>
           )}
@@ -104,6 +119,31 @@ function StatCard({
       </div>
     </div>
   );
+}
+
+function ChecklistItem({ step, title, link, href, isLast }: { step: number, title: string, link?: string, href?: string, isLast?: boolean }) {
+    return (
+        <div className="relative flex gap-4 group">
+            {!isLast && (
+                <div className="absolute left-[11px] top-8 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent" />
+            )}
+            <div className="relative shrink-0">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-black/50 text-[10px] font-bold text-zinc-500 shadow-[0_0_15px_rgba(0,0,0,0.5)] backdrop-blur-md transition-all duration-300 group-hover:border-emerald-500/50 group-hover:text-emerald-400 group-hover:scale-110 group-hover:shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                    {step}
+                </div>
+            </div>
+            <div className="pb-8 pt-0.5">
+                <h4 className="text-[13px] font-medium text-zinc-300 transition-colors group-hover:text-white">
+                    {title}
+                </h4>
+                {link && (
+                    <Link href={href || "#"} className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-blue-400 transition-all hover:text-blue-300 hover:translate-x-1">
+                        {link} <ArrowUpRight size={10} />
+                    </Link>
+                )}
+            </div>
+        </div>
+    )
 }
 
 export default function Page() {
@@ -139,199 +179,211 @@ export default function Page() {
     loadSummary();
   }, [projectId]);
 
-  // --- NEW: Loading State (Fixed Overlay) ---
+  // --- iOS Style Loading State ---
   if (loadingProject) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050505]">
-         {/* Background Grid for consistency */}
-         <div className="pointer-events-none absolute inset-0 opacity-[0.1]">
-            <div className="h-full w-full bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-         </div>
-         
-         <div className="relative flex flex-col items-center gap-4 animate-in fade-in zoom-in-95 duration-500">
-            {/* Logo Container with Glow */}
-            <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.03] border border-white/[0.08] shadow-2xl backdrop-blur-md">
-               <div className="absolute inset-0 bg-white/10 blur-xl rounded-full animate-pulse" />
-               <Zap size={24} className="relative z-10 text-white fill-white/20 animate-pulse duration-1000" />
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black">
+         <div className="relative flex flex-col items-center justify-center">
+            {/* Pulsing Aura */}
+            <div className="absolute inset-0 -z-10 animate-ping rounded-full bg-white/5 opacity-20 duration-1000" />
+            
+            <div className="relative flex h-20 w-20 items-center justify-center rounded-[2rem] bg-gradient-to-tr from-zinc-800 to-zinc-900 shadow-[0_0_40px_-10px_rgba(255,255,255,0.1)] ring-1 ring-white/10">
+               <Zap size={32} className="text-white fill-white animate-pulse" />
             </div>
             
-            <div className="text-[10px] font-semibold uppercase tracking-[0.25em] text-zinc-600 animate-pulse">
-               Initializing
+            <div className="mt-8 flex flex-col items-center gap-2">
+                <h2 className="text-lg font-medium text-white tracking-tight">TrialRescue</h2>
+                <div className="h-1 w-24 overflow-hidden rounded-full bg-zinc-900">
+                    <div className="h-full w-full origin-left animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+                </div>
             </div>
          </div>
       </div>
     );
   }
 
-  // --- Error State ---
   if (projectError || !projectId) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#050505] text-zinc-400">
-        <div className="rounded-lg border border-red-900/30 bg-red-950/10 px-6 py-4 text-sm backdrop-blur-md">
-          {projectError || "No project found. Please sign in again."}
+      <div className="flex min-h-screen items-center justify-center bg-black text-zinc-400">
+        <div className="flex flex-col items-center gap-4 rounded-3xl border border-white/10 bg-zinc-900/50 p-8 backdrop-blur-xl">
+          <div className="rounded-full bg-red-500/10 p-3 text-red-400">
+              <LogOut size={20} />
+          </div>
+          <p className="text-sm font-medium">{projectError || "Session expired."}</p>
+          <button onClick={() => router.push('/auth')} className="text-xs text-white underline decoration-zinc-600 underline-offset-4">Return to login</button>
         </div>
       </div>
     );
   }
 
-  // --- Main Dashboard UI ---
   return (
-    <div className="flex min-h-screen w-full bg-[#050505] font-sans selection:bg-white/20">
+    <div className="flex h-screen w-full bg-black font-sans text-zinc-100 selection:bg-white/20 overflow-hidden">
       
-      {/* Subtle Grid Background */}
-      <div className="pointer-events-none fixed inset-0 z-0 flex justify-center opacity-[0.15]">
-        <div className="h-full w-full bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+      {/* Ambient Background */}
+      <div className="pointer-events-none fixed inset-0 z-0">
+          <div className="absolute top-[-20%] left-[-10%] h-[600px] w-[600px] rounded-full bg-white/[0.03] blur-[120px]" />
+          <div className="absolute bottom-[-20%] right-[-10%] h-[500px] w-[500px] rounded-full bg-blue-500/[0.02] blur-[120px]" />
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
       </div>
 
-      {/* Sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-64 flex-col justify-between border-r border-white/[0.06] bg-[#050505]/80 px-4 py-6 backdrop-blur-xl md:flex z-20">
-        <div className="flex flex-col gap-8">
-          {/* Logo Area */}
-          <div className="flex items-center gap-3 px-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-               <Zap size={16} fill="currentColor" />
+      {/* Sidebar - "Floating Dock" Style */}
+      <aside className="relative z-20 hidden w-[280px] flex-col p-4 md:flex">
+        <div className="flex h-full flex-col justify-between rounded-[32px] border border-white/[0.06] bg-[#0A0A0A]/60 px-4 py-6 backdrop-blur-2xl shadow-2xl">
+            <div className="space-y-8">
+                {/* Brand */}
+                <div className="flex items-center gap-4 px-2">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-white to-zinc-400 text-black shadow-lg shadow-white/10">
+                        <Zap size={20} fill="currentColor" />
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-sm font-bold tracking-tight text-white">TrialRescue</span>
+                        <span className="text-[10px] font-medium text-zinc-500">Pro Workspace</span>
+                    </div>
+                </div>
+
+                {/* Nav */}
+                <nav className="space-y-1">
+                    <div className="px-4 pb-2 text-[10px] font-bold uppercase tracking-widest text-zinc-600">Menu</div>
+                    <NavItem href="/" icon={LayoutDashboard} label="Overview" isActive={pathname === "/"} />
+                    <NavItem href="/integration" icon={Layers} label="Integration" isActive={pathname === "/integration"} />
+                    <NavItem href="/settings" icon={Settings} label="Settings" isActive={pathname === "/settings"} />
+                </nav>
             </div>
+
+            {/* Footer */}
             <div>
-              <div className="text-sm font-bold tracking-tight text-white">TrialRescue</div>
-              <div className="text-[10px] font-medium text-zinc-500">Pro Plan</div>
+                <button
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-[13px] font-medium text-zinc-500 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                >
+                    <LogOut size={18} />
+                    Sign out
+                </button>
             </div>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex flex-col gap-1">
-            <div className="mb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-zinc-600">
-              Platform
-            </div>
-            <SidebarItem 
-              href="/" 
-              icon={LayoutDashboard} 
-              label="Overview" 
-              isActive={pathname === "/"} 
-            />
-            <SidebarItem 
-              href="/integration" 
-              icon={Layers} 
-              label="Integration" 
-              isActive={pathname === "/integration"} 
-            />
-            <SidebarItem 
-              href="/settings" 
-              icon={Settings} 
-              label="Settings" 
-              isActive={pathname === "/settings"} 
-            />
-          </nav>
-        </div>
-
-        {/* Sidebar Footer */}
-        <div className="flex flex-col gap-4 border-t border-white/[0.06] pt-4">
-            <button
-            onClick={handleLogout}
-            className="group flex w-full items-center gap-3 rounded-md px-3 py-2 text-[13px] font-medium text-zinc-500 transition-colors hover:bg-red-500/10 hover:text-red-400"
-            >
-            <LogOut size={16} className="opacity-70" />
-            Sign out
-            </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="relative z-10 flex-1 overflow-y-auto px-6 py-8 md:px-12 md:py-10">
-        <div className="mx-auto max-w-5xl space-y-10">
-          
-          {/* Header Section */}
-          <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-widest text-zinc-500">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></span>
-                Live Data
-              </div>
-              <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">
-                Performance
-              </h1>
-              <p className="max-w-lg text-[13px] leading-relaxed text-zinc-400">
-                Real-time metrics from your SaaS integration. Track trials, engagement, and rescue conversions.
-              </p>
-            </div>
-
-            <Link
-              href="/integration"
-              className="group flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-5 py-2.5 text-[13px] font-medium text-white backdrop-blur-sm transition-all hover:bg-white/[0.08] hover:pr-4 hover:pl-6 active:scale-95"
-            >
-              Integration Guide
-              <ChevronRight size={14} className="text-zinc-500 transition-transform group-hover:translate-x-0.5 group-hover:text-white" />
-            </Link>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid gap-5 md:grid-cols-3">
-            <StatCard
-              icon={Users}
-              label="Trials Started (30d)"
-              loading={loadingSummary}
-              value={String(summary?.trials_last_30 ?? 0)}
-              helper="New unique trials detected."
-            />
-            <StatCard
-              icon={Activity}
-              label="Users Nudged"
-              loading={loadingSummary}
-              value={String(summary?.nudged_users ?? 0)}
-              helper="Users receiving rescue emails."
-            />
-            <StatCard
-              icon={BarChart3}
-              label="Rescued Upgrades"
-              loading={loadingSummary}
-              value={String(summary?.upgrades_from_rescued ?? 0)}
-              helper="Conversions post-nudge."
-            />
-          </div>
-
-          {/* Onboarding / Next Steps Panel */}
-          <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0A0A0A] p-8">
-            <div className="absolute right-0 top-0 h-64 w-64 -translate-y-1/2 translate-x-1/2 bg-white/[0.02] blur-[80px] rounded-full pointer-events-none" />
+      {/* Main Content Area */}
+      <main className="relative z-10 flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth">
+         <div className="mx-auto max-w-6xl animate-in slide-in-from-bottom-8 fade-in duration-700">
             
-            <h2 className="mb-6 text-sm font-semibold text-zinc-200">
-                Implementation Checklist
-            </h2>
-            
-            <div className="space-y-4">
-              {[
-                {
-                    step: 1,
-                    text: "Send a test event from your backend",
-                    link: "Integration Docs",
-                    href: "/integration"
-                },
-                {
-                    step: 2,
-                    text: "Wire up 'user_signed_up' & 'user_activity'",
-                    code: true
-                },
-                {
-                    step: 3,
-                    text: "Analyze incoming stats for 24-48 hours",
-                }
-              ].map((item, idx) => (
-                <div key={idx} className="flex items-start gap-4 group">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.02] text-[10px] font-bold text-zinc-500 shadow-sm group-hover:border-white/20 group-hover:text-zinc-300 transition-colors">
-                        {item.step}
-                    </div>
-                    <div className="pt-0.5 text-[13px] text-zinc-400 leading-relaxed">
-                        {item.text} 
-                        {item.link && (
-                             <Link href={item.href || "#"} className="ml-2 inline-flex items-center text-white hover:underline decoration-zinc-700 underline-offset-4">
-                                {item.link} <ArrowUpRight size={10} className="ml-0.5 opacity-50" />
-                             </Link>
-                        )}
-                    </div>
+            {/* Top Bar */}
+            <header className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-center">
+                <div>
+                   <div className="flex items-center gap-2 mb-2">
+                      <span className="flex h-2 w-2 relative">
+                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                         <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      </span>
+                      <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">System Online</span>
+                   </div>
+                   <h1 className="text-4xl font-bold tracking-tight text-white drop-shadow-lg">Dashboard</h1>
                 </div>
-              ))}
+
+                <Link
+                  href="/integration"
+                  className="group relative flex items-center gap-2 overflow-hidden rounded-full bg-white px-6 py-2.5 text-[13px] font-bold text-black transition-transform hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+                >
+                  <span className="relative z-10 flex items-center gap-2">
+                     Integration Guide
+                     <ChevronRight size={14} className="transition-transform group-hover:translate-x-1" />
+                  </span>
+                  <div className="absolute inset-0 -z-0 bg-gradient-to-r from-zinc-200 to-white opacity-0 transition-opacity group-hover:opacity-100" />
+                </Link>
+            </header>
+
+            {/* Metrics */}
+            <section className="mb-8 grid gap-4 md:grid-cols-3">
+               <StatCard 
+                 index={1}
+                 icon={Users}
+                 label="New Trials" 
+                 value={String(summary?.trials_last_30 ?? 0)} 
+                 loading={loadingSummary}
+                 helper="Last 30 days activity"
+               />
+               <StatCard 
+                 index={2}
+                 icon={Activity}
+                 label="Users Nudged" 
+                 value={String(summary?.nudged_users ?? 0)} 
+                 loading={loadingSummary}
+                 helper="Engagement emails sent"
+               />
+               <StatCard 
+                 index={3}
+                 icon={BarChart3}
+                 label="Rescued" 
+                 value={String(summary?.upgrades_from_rescued ?? 0)} 
+                 loading={loadingSummary}
+                 helper="Recovered revenue conversions"
+               />
+            </section>
+
+            {/* Bottom Section: Checklist & Info */}
+            <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+               
+               {/* Setup Checklist */}
+               <div className="rounded-[32px] border border-white/[0.06] bg-[#121212]/40 p-8 backdrop-blur-xl">
+                   <div className="mb-6 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                         <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/[0.05] text-white">
+                             <CheckCircle2 size={20} />
+                         </div>
+                         <div>
+                            <h3 className="text-lg font-semibold text-white">Quick Setup</h3>
+                            <p className="text-[12px] text-zinc-500">Complete these steps to activate automation</p>
+                         </div>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">0% Complete</span>
+                   </div>
+
+                   <div className="pl-2">
+                       <ChecklistItem 
+                          step={1} 
+                          title="Send a test event from your backend" 
+                          link="Read Documentation" 
+                          href="/integration" 
+                       />
+                       <ChecklistItem 
+                          step={2} 
+                          title="Wire up 'user_signed_up' & 'user_activity'" 
+                       />
+                       <ChecklistItem 
+                          step={3} 
+                          title="Analyze incoming stats for 24-48 hours" 
+                          isLast
+                       />
+                   </div>
+               </div>
+
+               {/* Hint Card */}
+               <div className="relative overflow-hidden rounded-[32px] border border-white/[0.06] bg-gradient-to-br from-blue-900/20 to-purple-900/20 p-8 backdrop-blur-xl">
+                   <div className="relative z-10 h-full flex flex-col justify-between">
+                      <div>
+                          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-200">
+                             Pro Tip
+                          </div>
+                          <h3 className="text-xl font-semibold text-white leading-tight">
+                              Recovery works best when automated.
+                          </h3>
+                          <p className="mt-3 text-[13px] text-zinc-400 leading-relaxed">
+                              TrialRescue automatically filters out users who have upgraded, so you never spam paying customers.
+                          </p>
+                      </div>
+                      <div className="mt-8">
+                         <Link href="/settings" className="text-[13px] font-medium text-white hover:underline decoration-white/30 underline-offset-4">
+                            Configure Rules &rarr;
+                         </Link>
+                      </div>
+                   </div>
+                   
+                   {/* Decorative Blob */}
+                   <div className="absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-blue-500/20 blur-[80px]" />
+               </div>
+
             </div>
-          </div>
-          
-        </div>
+         </div>
       </main>
     </div>
   );
