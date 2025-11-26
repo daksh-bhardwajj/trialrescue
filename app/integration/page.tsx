@@ -367,7 +367,7 @@ await fetch("${API_BASE_URL}/api/events", {
                 {/* Nav */}
                 <nav className="space-y-1">
                     <div className="px-4 pb-2 text-[10px] font-bold uppercase tracking-widest text-zinc-600">Menu</div>
-                    <NavItem href="/" icon={LayoutDashboard} label="Overview" isActive={pathname === "/"} />
+                    <NavItem href="/app" icon={LayoutDashboard} label="Overview" isActive={pathname === "/app"} />
                     <NavItem href="/integration" icon={Layers} label="Integration" isActive={pathname === "/integration"} />
                     <NavItem href="/settings" icon={Settings} label="Settings" isActive={pathname === "/settings"} />
                 </nav>
@@ -392,7 +392,7 @@ await fetch("${API_BASE_URL}/api/events", {
           
           {/* Mobile Header (Back Button) */}
           <div className="md:hidden flex items-center gap-2 mb-4">
-            <Link href="/" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-md">
+            <Link href="/app" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-md">
                 <ChevronLeft size={20} className="text-white" />
             </Link>
             <span className="text-lg font-bold text-white">Integration</span>

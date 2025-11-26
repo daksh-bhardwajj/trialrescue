@@ -42,14 +42,14 @@ export default function AuthPage() {
 
         // We no longer create the project here.
         // resolve-project will auto-create it on first dashboard load.
-        router.push("/");
+        router.push("/app");
       } else {
         const { error } = await supabaseBrowser.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
-        router.push("/");
+        router.push("/app");
       }
     } catch (err: any) {
       console.error(err);
@@ -76,7 +76,7 @@ export default function AuthPage() {
           className="group flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-4 py-2 text-[13px] font-medium text-zinc-400 backdrop-blur-md transition-all hover:bg-white/10 hover:text-white hover:pl-3 hover:pr-5"
         >
           <ChevronLeft size={16} className="transition-transform group-hover:-translate-x-0.5" />
-          Back to Home
+          Back
         </Link>
       </div>
 
@@ -94,7 +94,7 @@ export default function AuthPage() {
           </h1>
           <p className="mt-3 text-[14px] text-zinc-400 max-w-[300px] leading-relaxed">
             {mode === "signup"
-              ? "Automate your customer recovery. No credit card required."
+              ? "Automate your customer recovery."
               : "Access your dashboard to view recovery metrics."}
           </p>
         </div>
