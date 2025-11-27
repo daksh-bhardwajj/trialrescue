@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
+import { email, z } from "zod";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const bodySchema = z.object({
@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
       .from("projects")
       .insert({
         name: project_name,
+        owner_email: email,
         owner_user_id: user_id,
         api_key,
       })
