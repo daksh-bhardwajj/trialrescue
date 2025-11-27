@@ -1,13 +1,28 @@
+/* eslint-disable react/no-children-prop */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState } from "react";
+import { Activity, useEffect, useState } from "react";
 import Link from "next/link";
 import { useCurrentProject } from "../hooks/useCurrentProject";
+import { 
+  CreditCard, 
+  Check, 
+  Sparkles, 
+  ShieldCheck, 
+  ArrowRight, 
+  Loader2, 
+  AlertCircle,
+  LayoutTemplate,
+  Lock,
+  Zap,
+  CheckCircle2
+} from "lucide-react";
 
-const DODO_CHECKOUT_URL =
-  "https://test.checkout.dodopayments.com/buy/pdt_QfENHSfu1kRvmtdToiUng?quantity=1&redirect_url=https://www.trialrescue.vercel.app%2Fapp%2Fbilling%2Fsuccess";
+// --- Constants ---
+const DODO_CHECKOUT_URL = "https://test.checkout.dodopayments.com/buy/pdt_QfENHSfu1kRvmtdToiUng?quantity=1&redirect_url=https://trialrescue.vercel.app%2Fapp%2Fbilling%2Fsuccess";
 
+// --- Types ---
 type BillingInfo = {
   id: string;
   billing_status: string | null;
@@ -15,9 +30,26 @@ type BillingInfo = {
   billing_updated_at: string | null;
 };
 
+// --- Components ---
+
+function StatusBadge({ active }: { active: boolean }) {
+  return (
+    <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md ${
+      active 
+        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.15)]" 
+        : "border-amber-500/30 bg-amber-500/10 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.15)]"
+    }`}>
+      <span className="relative flex h-1.5 w-1.5">
+        <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${active ? "bg-emerald-400" : "bg-amber-400"}`}></span>
+        <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${active ? "bg-emerald-500" : "bg-amber-500"}`}></span>
+      </span>
+      {active ? "Active Plan" : "Trial Restrictions"}
+    </div>
+  );
+}
+
 export default function BillingPage() {
-  const { projectId, loading: loadingProject, error: projectError } =
-    useCurrentProject();
+  const { projectId, loading: loadingProject, error: projectError } = useCurrentProject();
 
   const [billing, setBilling] = useState<BillingInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,20 +86,31 @@ export default function BillingPage() {
     };
   }, [projectId]);
 
-  if (loadingProject) {
+  // --- Loading State ---
+  if (loadingProject || (loading && !billing)) {
     return (
-      <div className="flex-1 px-4 md:px-6 py-6">
-        <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-400">
-          Resolving your project…
-        </div>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050505]">
+         <div className="pointer-events-none absolute inset-0 opacity-[0.1]">
+            <div className="h-full w-full bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+         </div>
+         <div className="relative flex flex-col items-center gap-4 animate-in fade-in zoom-in-95 duration-500">
+            <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.03] border border-white/[0.08] shadow-2xl backdrop-blur-md">
+               <CreditCard size={24} className="relative z-10 text-white animate-pulse" />
+            </div>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.25em] text-zinc-600 animate-pulse">
+               Fetching Plan
+            </div>
+         </div>
       </div>
     );
   }
 
+  // --- Error State ---
   if (projectError || !projectId) {
     return (
-      <div className="flex-1 px-4 md:px-6 py-6">
-        <div className="rounded-2xl border border-rose-800/60 bg-rose-950/40 p-4 text-sm text-rose-200">
+      <div className="flex min-h-screen items-center justify-center bg-[#050505] text-zinc-400">
+        <div className="rounded-lg border border-red-900/30 bg-red-950/10 px-6 py-4 text-sm backdrop-blur-md flex items-center gap-3">
+          <AlertCircle size={16} className="text-red-400" />
           {projectError || "No project found for this account."}
         </div>
       </div>
@@ -77,146 +120,191 @@ export default function BillingPage() {
   const status = billing?.billing_status || "free";
   const isActive = status === "active";
 
+  // --- Main UI ---
   return (
-    <div className="flex-1 px-4 md:px-6 py-6 space-y-4 overflow-y-auto scrollbar-thin">
-      <div className="flex items-center justify-between mb-1">
-        <div>
-          <div className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
-            Billing
-          </div>
-          <h1 className="text-lg md:text-xl font-semibold text-slate-50">
-            Your plan & access
-          </h1>
-          <p className="mt-1 text-xs text-slate-500 max-w-2xl">
-            Trial Rescue only unlocks full automation for paid accounts. Until
-            you upgrade, you can explore the app and integration, but nudges
-            won&apos;t be sent.
-          </p>
-        </div>
-        <div className="hidden md:flex flex-col items-end text-xs text-slate-500">
-          <span>Current status</span>
-          <span
-            className={
-              isActive
-                ? "text-emerald-400 font-medium"
-                : "text-amber-300 font-medium"
-            }
-          >
-            {isActive ? "Active (paid)" : "Free (inactive)"}
-          </span>
-        </div>
+    <div className="flex min-h-screen w-full bg-[#050505] font-sans selection:bg-white/20">
+      
+      {/* Background Grid */}
+      <div className="pointer-events-none fixed inset-0 z-0 flex justify-center opacity-[0.15]">
+        <div className="h-full w-full bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
       </div>
 
-      {error && (
-        <div className="rounded-xl border border-rose-800/60 bg-rose-950/40 px-3 py-2 text-xs text-rose-100">
-          {error}
-        </div>
-      )}
-
-      <div className="grid gap-4 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-        {/* Plan card */}
-        <div className="rounded-2xl border border-emerald-500/40 bg-gradient-to-b from-emerald-500/10 via-slate-950 to-slate-950 p-4 md:p-5 shadow-[0_0_0_1px_rgba(16,185,129,0.3),0_20px_80px_rgba(6,95,70,0.4)]">
-          <div className="mb-3 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-300">
-                Early Bird
-              </p>
-              <p className="text-sm text-slate-200">
-                $19/mo · first 20 founders only
+      <div className="relative z-10 flex-1 overflow-y-auto px-6 py-8 md:px-12 md:py-10">
+        <div className="mx-auto max-w-5xl space-y-10">
+          
+          {/* Header */}
+          <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end border-b border-white/[0.08] pb-8">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-widest text-zinc-500">
+                <CreditCard size={12} />
+                Subscription
+              </div>
+              <h1 className="text-3xl font-bold tracking-tight text-white">
+                Billing & Usage
+              </h1>
+              <p className="text-[13px] text-zinc-400 max-w-lg leading-relaxed">
+                Manage your subscription and unlock full automation capabilities. 
+                {isActive 
+                  ? " Your workspace is fully active." 
+                  : " Upgrade required to enable live nudges."
+                }
               </p>
             </div>
-            <span className="rounded-full bg-emerald-500/20 px-2 py-1 text-[10px] font-medium text-emerald-100">
-              Limited seats
-            </span>
-          </div>
 
-          <div className="mb-4 flex items-baseline gap-1">
-            <span className="text-3xl font-semibold text-slate-50">$19</span>
-            <span className="text-xs text-slate-400">/month</span>
-          </div>
-
-          <ul className="mb-4 space-y-1.5 text-[11px] text-slate-100">
-            <li>• Automated 3-stage trial nudge system</li>
-            <li>• Product-branded emails with your reply-to</li>
-            <li>• Works for any trial-based SaaS</li>
-            <li>• Direct access to the builder during early access</li>
-          </ul>
-
-          {isActive ? (
-            <div className="rounded-xl border border-emerald-400/60 bg-emerald-500/10 px-3 py-2 text-[11px] text-emerald-100">
-              Your account is active. All automations are enabled. You&apos;re
-              good to go.
+            <div className="flex flex-col items-end gap-2">
+               <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-600">Current Status</span>
+               <StatusBadge active={isActive} />
             </div>
-          ) : (
-            <>
-              <a
-                href={DODO_CHECKOUT_URL}
-                className="mb-2 flex w-full items-center justify-center rounded-xl border border-emerald-400/80 bg-emerald-500/20 px-4 py-2 text-xs font-semibold text-emerald-50 hover:bg-emerald-500/30"
-              >
-                Upgrade to Early Bird for $19/mo →
-              </a>
-              <p className="text-[10px] text-emerald-100/80">
-                You&apos;ll be charged immediately. No trial. Cancel anytime
-                before the next renewal. Once we confirm payment, we&apos;ll
-                switch your status to Active.
-              </p>
-            </>
+          </div>
+
+          {error && (
+            <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-[13px] text-red-200 flex items-center gap-2">
+              <AlertCircle size={14} />
+              {error}
+            </div>
           )}
-        </div>
 
-        {/* Status / next steps */}
-        <div className="space-y-3">
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/80 p-4">
-            <p className="text-sm font-semibold text-slate-100">
-              What happens after you upgrade?
-            </p>
-            <ul className="mt-2 space-y-1.5 text-[11px] text-slate-400">
-              <li>• Your billing status is set to Active.</li>
-              <li>• Trial Rescue starts sending nudges to inactive trial users.</li>
-              <li>
-                • You&apos;ll see rescued trials and upgrades appear in your
-                dashboard.
-              </li>
-            </ul>
-          </div>
+          <div className="grid gap-8 lg:grid-cols-[1.5fr_1fr]">
+            
+            {/* Left Column: Plan Card */}
+            <div className="relative group">
+                <div className={`absolute -inset-0.5 rounded-[32px] blur-xl opacity-20 transition-opacity duration-500 ${isActive ? "bg-emerald-500" : "bg-gradient-to-r from-cyan-500 via-purple-500 to-emerald-500 animate-pulse"}`} />
+                
+                <div className="relative h-full rounded-[30px] border border-white/10 bg-[#080808] p-8 md:p-10 shadow-2xl overflow-hidden flex flex-col">
+                   {/* Metal sheen effect */}
+                   <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50" />
+                   
+                   <div className="flex justify-between items-start mb-8">
+                      <div>
+                         <div className="flex items-center gap-2 mb-2">
+                            <h3 className="text-xl font-bold text-white">Early Bird</h3>
+                            {!isActive && (
+                                <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-[9px] font-bold text-amber-400 uppercase tracking-wide">
+                                    Limited
+                                </span>
+                            )}
+                         </div>
+                         <p className="text-sm text-zinc-500">Founder Special • 20 Seats</p>
+                      </div>
+                      <div className="text-right">
+                         <span className="text-4xl font-bold text-white tracking-tighter">$19</span>
+                         <span className="text-zinc-500 font-medium text-sm">/mo</span>
+                      </div>
+                   </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/80 p-4 text-[11px] text-slate-400">
-            <p className="text-sm font-semibold text-slate-100 mb-1">
-              While you&apos;re still on free:
-            </p>
-            <ul className="space-y-1.5">
-              <li>• You can integrate the API and send test events.</li>
-              <li>• You can configure branding and automation rules.</li>
-              <li>• Emails will not go out to your trial users yet.</li>
-            </ul>
-            <p className="mt-2">
-              If you&apos;ve already paid and still see &quot;Free&quot;, reach
-              out via your support email and we&apos;ll flip it to Active.
-            </p>
-          </div>
+                   <div className="space-y-5 mb-10 flex-1">
+                      {[
+                          'Unlimited recovered users', 
+                          'Custom sender branding', 
+                          '3-stage smart nudge sequences', 
+                          'Priority founder support',
+                          'Cancel anytime'
+                      ].map((feat) => (
+                         <div key={feat} className="flex items-center gap-3">
+                            <div className={`flex h-5 w-5 items-center justify-center rounded-full ${isActive ? "bg-emerald-500/20 text-emerald-400" : "bg-white text-black"}`}>
+                               <Check size={12} strokeWidth={3} />
+                            </div>
+                            <span className="text-sm text-zinc-300 font-medium">{feat}</span>
+                         </div>
+                      ))}
+                   </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/80 p-4 text-[11px] text-slate-400">
-            <p className="text-sm font-semibold text-slate-100 mb-1">
-              Back to app
-            </p>
-            <p>
-              You can always return to your dashboard and settings while you
-              decide:
-            </p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <Link
-                href="/app"
-                className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-[11px] text-slate-100 hover:border-slate-500"
-              >
-                Go to dashboard
-              </Link>
-              <Link
-                href="/settings"
-                className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-[11px] text-slate-100 hover:border-slate-500"
-              >
-                Branding & automation
-              </Link>
+                   {isActive ? (
+                        <div className="mt-auto w-full rounded-xl border border-emerald-500/20 bg-emerald-500/10 py-4 text-center">
+                            <div className="flex items-center justify-center gap-2 text-emerald-400 font-bold text-sm">
+                                <CheckCircle2 size={16} />
+                                Plan Active
+                            </div>
+                            <p className="text-[10px] text-emerald-300/70 mt-1">Thank you for supporting us.</p>
+                        </div>
+                   ) : (
+                        <a 
+                            href={DODO_CHECKOUT_URL}
+                            className="group flex w-full items-center justify-center gap-2 rounded-xl bg-white py-4 text-sm font-bold text-black transition-all hover:bg-zinc-200 hover:scale-[1.02] shadow-lg shadow-white/10"
+                        >
+                            Upgrade Now
+                            <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+                        </a>
+                   )}
+                   
+                   {!isActive && (
+                        <div className="mt-6 flex justify-center gap-4 opacity-50">
+                            <div className="flex items-center gap-1.5 text-[10px] text-zinc-400">
+                                <ShieldCheck size={12} />
+                                <span>Secure Payment</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[10px] text-zinc-400">
+                                <Lock size={12} />
+                                <span>Money-back Guarantee</span>
+                            </div>
+                        </div>
+                   )}
+                </div>
             </div>
+
+            {/* Right Column: Status & Info */}
+            <div className="space-y-6">
+               
+               {/* Current Limits */}
+               <div className="rounded-[24px] border border-white/[0.08] bg-[#0A0A0A] p-6 backdrop-blur-sm">
+                  <div className="mb-6 flex items-center gap-3">
+                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-900 border border-white/5 text-zinc-400">
+                        <Activity children={undefined}/>
+                     </div>
+                     <h3 className="text-sm font-bold text-white">System Status</h3>
+                  </div>
+                  
+                  <div className="space-y-4">
+                     <div className="flex items-center justify-between text-[12px]">
+                        <span className="text-zinc-400">Integration API</span>
+                        <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
+                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                           Active
+                        </div>
+                     </div>
+                     <div className="h-px w-full bg-white/5" />
+                     <div className="flex items-center justify-between text-[12px]">
+                        <span className="text-zinc-400">Configuration</span>
+                        <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
+                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                           Active
+                        </div>
+                     </div>
+                     <div className="h-px w-full bg-white/5" />
+                     <div className="flex items-center justify-between text-[12px]">
+                        <span className="text-zinc-400">Email Nudges</span>
+                        {isActive ? (
+                            <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                Live
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-1.5 text-amber-400 font-medium">
+                                <Lock size={10} />
+                                Locked
+                            </div>
+                        )}
+                     </div>
+                  </div>
+               </div>
+
+               {/* Quick Links */}
+               <div className="rounded-[24px] border border-white/[0.08] bg-[#0A0A0A] p-6 backdrop-blur-sm">
+                  <h3 className="text-sm font-bold text-white mb-4">Workspace</h3>
+                  <div className="space-y-2">
+                     <Link href="/" className="group flex w-full items-center justify-between rounded-xl bg-white/[0.03] px-4 py-3 text-[12px] text-zinc-300 transition-colors hover:bg-white/[0.06] hover:text-white">
+                        <span>Go to Dashboard</span>
+                        <ArrowRight size={12} className="opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0" />
+                     </Link>
+                     <Link href="/settings" className="group flex w-full items-center justify-between rounded-xl bg-white/[0.03] px-4 py-3 text-[12px] text-zinc-300 transition-colors hover:bg-white/[0.06] hover:text-white">
+                        <span>Branding Settings</span>
+                        <ArrowRight size={12} className="opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0" />
+                     </Link>
+                  </div>
+               </div>
+
+            </div>
+
           </div>
         </div>
       </div>

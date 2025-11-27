@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -19,6 +20,9 @@ import {
   Layers,
   CheckCircle2,
   Sparkles,
+  Lock,
+  CreditCard,
+  ArrowRight
 } from "lucide-react";
 
 // --- Types ---
@@ -170,7 +174,7 @@ function ChecklistItem({
   );
 }
 
-// --- Paid dashboard content (your original UI) ---
+// --- Paid dashboard content ---
 
 function PaidDashboard({
   summary,
@@ -461,10 +465,10 @@ export default function Page() {
                 Menu
               </div>
               <NavItem
-                href="/app"
+                href="/"
                 icon={LayoutDashboard}
                 label="Overview"
-                isActive={pathname === "/app"}
+                isActive={pathname === "/"}
               />
               <NavItem
                 href="/integration"
@@ -480,7 +484,7 @@ export default function Page() {
               />
               <NavItem
                 href="/billing"
-                icon={Sparkles}
+                icon={isActive ? CreditCard : Sparkles}
                 label={isActive ? "Billing" : "Upgrade"}
                 isActive={pathname === "/billing"}
               />
@@ -505,117 +509,119 @@ export default function Page() {
         {isActive ? (
           <PaidDashboard summary={summary} loadingSummary={loadingSummary} />
         ) : (
-          <div className="mx-auto max-w-3xl animate-in slide-in-from-bottom-8 fade-in duration-700">
-            <div className="mb-6 flex items-center justify-between gap-4">
-              <div>
-                <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                  <span className="text-[11px] font-medium text-amber-100">
-                    Upgrade required to unlock automations
-                  </span>
+          <div className="mx-auto max-w-4xl animate-in slide-in-from-bottom-8 fade-in duration-700">
+            {/* Header Lock State */}
+            <div className="mb-10 flex items-end justify-between border-b border-white/[0.06] pb-8">
+                <div>
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="flex h-2 w-2 relative">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+                            <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500"></span>
+                        </span>
+                        <span className="text-[11px] font-bold uppercase tracking-widest text-amber-500">Trial Mode</span>
+                    </div>
+                    <h1 className="text-3xl font-bold tracking-tight text-white drop-shadow-md">Activate TrialRescue</h1>
+                    <p className="mt-2 text-[13px] text-zinc-400 max-w-lg leading-relaxed">
+                        Your workspace is initialized but restricted. Unlock full automation capabilities to start recovering revenue.
+                    </p>
                 </div>
-                <h1 className="text-3xl font-bold tracking-tight text-white drop-shadow-lg">
-                  Activate TrialRescue
-                </h1>
-                <p className="mt-2 text-xs text-zinc-400">
-                  You&apos;re signed in and your workspace is ready, but your
-                  account is still on the free tier. Upgrade to Early Bird to
-                  start nudging inactive trials automatically.
-                </p>
-              </div>
-              <Link
-                href="/billing"
-                className="hidden rounded-full border border-emerald-400/70 bg-emerald-500/20 px-4 py-2 text-[11px] font-semibold text-emerald-50 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:bg-emerald-500/30 md:inline-flex"
-              >
-                Go to billing →
-              </Link>
+                
+                <Link
+                    href="/billing"
+                    className="group hidden md:flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-[13px] font-bold text-black shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all hover:scale-105 active:scale-95"
+                >
+                    <Sparkles size={14} className="text-amber-600 fill-amber-600" />
+                    Unlock Pro
+                </Link>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-[1.5fr_minmax(0,1fr)]">
-              <div className="rounded-[28px] border border-emerald-500/40 bg-gradient-to-b from-emerald-500/10 via-[#050505] to-[#050505] p-5 shadow-[0_0_0_1px_rgba(16,185,129,0.3),0_20px_80px_rgba(6,95,70,0.5)]">
-                <div className="mb-3 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-300">
-                      Early Bird
-                    </p>
-                    <p className="text-sm text-slate-100">
-                      $19/mo · first 20 founders only
-                    </p>
-                  </div>
-                  <span className="rounded-full bg-emerald-500/20 px-2 py-1 text-[10px] font-medium text-emerald-100">
-                    Limited seats
-                  </span>
-                </div>
+            <div className="grid gap-6 md:grid-cols-[1.6fr_1fr]">
+              {/* Pricing Card */}
+              <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[#0A0A0A] p-8 shadow-2xl">
+                 <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
+                 
+                 <div className="flex justify-between items-start mb-8">
+                    <div>
+                       <div className="inline-flex items-center px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 uppercase tracking-wide mb-2">
+                          Early Bird
+                       </div>
+                       <h2 className="text-xl font-bold text-white">Founder's Pass</h2>
+                    </div>
+                    <div className="text-right">
+                       <span className="text-4xl font-bold text-white tracking-tighter">$19</span>
+                       <span className="text-zinc-500 text-sm font-medium">/mo</span>
+                    </div>
+                 </div>
 
-                <div className="mb-4 flex items-baseline gap-1">
-                  <span className="text-3xl font-semibold text-slate-50">
-                    $19
-                  </span>
-                  <span className="text-xs text-slate-300">/month</span>
-                </div>
+                 <div className="space-y-4 mb-8">
+                    {[
+                        'Unlimited recovered users',
+                        'Custom branding & domains',
+                        '3-stage smart nudge system',
+                        'Direct founder support'
+                    ].map((feat) => (
+                        <div key={feat} className="flex items-center gap-3">
+                            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-black">
+                                <CheckCircle2 size={12} />
+                            </div>
+                            <span className="text-sm text-zinc-300 font-medium">{feat}</span>
+                        </div>
+                    ))}
+                 </div>
 
-                <ul className="mb-4 space-y-1.5 text-[11px] text-slate-100">
-                  <li>• Automated 3-stage trial nudge system</li>
-                  <li>• Product-branded emails with your reply-to</li>
-                  <li>• Works for any trial-based SaaS</li>
-                  <li>• Direct access to the builder during early access</li>
-                </ul>
-
-                <Link
-                  href="/billing"
-                  className="mb-2 flex w-full items-center justify-center rounded-xl border border-emerald-400/80 bg-emerald-500/20 px-4 py-2 text-xs font-semibold text-emerald-50 hover:bg-emerald-500/30"
-                >
-                  Upgrade to Early Bird inside billing →
-                </Link>
-                <p className="text-[10px] text-emerald-100/80">
-                  Once we confirm payment, we set your status to Active and
-                  automations unlock. Until then, you can still explore the app
-                  and wire the integration.
-                </p>
+                 <Link
+                    href="/billing"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-3.5 text-sm font-bold text-black transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                 >
+                    Upgrade Now
+                    <ArrowRight size={14} />
+                 </Link>
+                 
+                 <p className="mt-4 text-center text-[10px] text-zinc-500">
+                    One-time setup. Cancel anytime.
+                 </p>
               </div>
 
-              <div className="space-y-3">
-                <div className="rounded-[24px] border border-white/[0.06] bg-[#121212]/60 p-4 backdrop-blur-xl">
-                  <p className="text-sm font-semibold text-slate-100">
-                    While you&apos;re on free:
-                  </p>
-                  <ul className="mt-2 space-y-1.5 text-[11px] text-slate-400">
-                    <li>• You can integrate the API and send test events.</li>
-                    <li>• You can configure branding and automation rules.</li>
-                    <li>• Emails will not go out to your real trial users yet.</li>
-                  </ul>
-                </div>
+              {/* Status & Next Steps */}
+              <div className="space-y-4">
+                 {/* Current Status Card */}
+                 <div className="rounded-[24px] border border-white/10 bg-[#121212]/40 p-6 backdrop-blur-xl">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="h-8 w-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-400">
+                            <Lock size={16} />
+                        </div>
+                        <h3 className="text-sm font-bold text-white">Current Limits</h3>
+                    </div>
+                    <ul className="space-y-3">
+                        <li className="flex items-center justify-between text-[12px]">
+                            <span className="text-zinc-400">Integration</span>
+                            <span className="text-emerald-400 font-medium">Active</span>
+                        </li>
+                        <li className="flex items-center justify-between text-[12px]">
+                            <span className="text-zinc-400">Configuration</span>
+                            <span className="text-emerald-400 font-medium">Unlocked</span>
+                        </li>
+                        <li className="flex items-center justify-between text-[12px]">
+                            <span className="text-zinc-400">Live Nudges</span>
+                            <span className="text-red-400 font-medium flex items-center gap-1">
+                                <Lock size={10} /> Paused
+                            </span>
+                        </li>
+                    </ul>
+                 </div>
 
-                <div className="rounded-[24px] border border-white/[0.06] bg-[#121212]/60 p-4 backdrop-blur-xl">
-                  <p className="text-sm font-semibold text-slate-100 mb-1">
-                    Next steps
-                  </p>
-                  <ul className="space-y-1.5 text-[11px] text-slate-400">
-                    <li>1. Go to Billing and grab the Early Bird checkout.</li>
-                    <li>2. After payment, we mark your workspace as Active.</li>
-                    <li>3. TrialRescue starts nudging inactive trials daily.</li>
-                  </ul>
-                  <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
-                    <Link
-                      href="/billing"
-                      className="rounded-lg border border-emerald-400/70 bg-emerald-500/20 px-3 py-1.5 font-semibold text-emerald-50 hover:bg-emerald-500/30"
-                    >
-                      Open Billing →
-                    </Link>
-                    <Link
-                      href="/integration"
-                      className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-slate-100 hover:border-slate-500"
-                    >
-                      View Integration docs
-                    </Link>
-                    <Link
-                      href="/settings"
-                      className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-slate-100 hover:border-slate-500"
-                    >
-                      Branding & automation
-                    </Link>
-                  </div>
-                </div>
+                 {/* Documentation Links */}
+                 <div className="rounded-[24px] border border-white/10 bg-[#121212]/40 p-6 backdrop-blur-xl">
+                    <h3 className="text-sm font-bold text-white mb-4">Resources</h3>
+                    <div className="space-y-2">
+                        <Link href="/integration" className="block w-full text-left px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] text-zinc-300 transition-colors">
+                            View Integration Guide
+                        </Link>
+                        <Link href="/settings" className="block w-full text-left px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] text-zinc-300 transition-colors">
+                            Configure Branding
+                        </Link>
+                    </div>
+                 </div>
               </div>
             </div>
           </div>
