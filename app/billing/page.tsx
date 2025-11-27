@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 
 // --- Constants ---
-const DODO_CHECKOUT_URL = "https://test.checkout.dodopayments.com/buy/pdt_QfENHSfu1kRvmtdToiUng?quantity=1&redirect_url=https://trialrescue.vercel.app%2Fapp%2Fbilling%2Fsuccess";
+const DODO_CHECKOUT_URL = "https://test.checkout.dodopayments.com/buy/pdt_QfENHSfu1kRvmtdToiUng?quantity=1&redirect_url=https://trialrescue.vercel.app%2Fbilling%2Fsuccess";
 
 // --- Types ---
 type BillingInfo = {
