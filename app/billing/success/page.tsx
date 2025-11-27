@@ -1,88 +1,119 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2 } from "lucide-react";
+import { Check, ArrowRight, ShieldCheck, Loader2 } from "lucide-react";
 
 export default function BillingSuccessPage() {
   const router = useRouter();
+  const [countdown, setCountdown] = useState(10);
 
   useEffect(() => {
-    // Optional: after 10s, push them to /app
-    const t = setTimeout(() => {
+    // Countdown timer
+    const interval = setInterval(() => {
+      setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    // Redirect
+    const timeout = setTimeout(() => {
       router.push("/app");
     }, 10000);
-    return () => clearTimeout(t);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
   }, [router]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black text-zinc-100">
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-emerald-500/40 bg-gradient-to-b from-emerald-500/15 via-[#050505] to-[#050505] p-6 shadow-[0_0_0_1px_rgba(16,185,129,0.3),0_20px_80px_rgba(6,95,70,0.5)]">
-        {/* Glow */}
-        <div className="pointer-events-none absolute -right-20 -top-20 h-40 w-40 rounded-full bg-emerald-400/25 blur-[80px]" />
+    <div className="relative flex min-h-screen w-full items-center justify-center bg-[#020202] font-sans text-zinc-100 selection:bg-emerald-500/30 overflow-hidden">
+      
+      {/* --- Ambient Lighting (Celebratory Emerald) --- */}
+      <div className="pointer-events-none fixed inset-0 z-0">
+         <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 h-[600px] w-[600px] rounded-full bg-emerald-500/[0.08] blur-[120px] opacity-60" />
+         <div className="absolute bottom-[-20%] right-[-10%] h-[500px] w-[500px] rounded-full bg-blue-500/[0.03] blur-[150px]" />
+         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
+      </div>
 
-        <div className="relative z-10 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-200">
-              <CheckCircle2 size={22} />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold text-emerald-50">
-                Payment received
-              </h1>
-              <p className="text-[11px] text-emerald-100/80">
-                Thanks for grabbing the Early Bird plan.
+      <div className="relative z-10 w-full max-w-lg px-6 animate-in fade-in zoom-in-95 duration-700">
+        
+        <div className="group relative overflow-hidden rounded-[32px] border border-white/10 bg-[#0A0A0A] p-8 shadow-2xl">
+           
+           {/* Top Sheen */}
+           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
+           <div className="absolute bottom-0 inset-x-0 h-1 bg-zinc-900">
+              <div 
+                className="h-full bg-emerald-500 transition-all duration-1000 ease-linear" 
+                style={{ width: `${(10 - countdown) * 10}%` }}
+              />
+           </div>
+
+           <div className="relative z-10 flex flex-col items-center text-center">
+              
+              {/* Success Icon */}
+              <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_40px_-10px_rgba(16,185,129,0.3)]">
+                 <div className="relative">
+                    <div className="absolute inset-0 animate-ping rounded-full bg-emerald-400 opacity-20 duration-1000" />
+                    <Check size={40} className="text-emerald-400 relative z-10" strokeWidth={3} />
+                 </div>
+              </div>
+
+              <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Payment Confirmed</h1>
+              <p className="text-zinc-400 text-sm max-w-xs mb-8">
+                 Welcome to the Early Bird club. Your TrialRescue workspace has been successfully activated.
               </p>
-            </div>
-          </div>
 
-          <p className="text-xs text-zinc-300">
-            Your payment with our provider has been completed. We&apos;re
-            activating your Trial Rescue workspace now. This usually takes a
-            short moment while we sync things on our side.
-          </p>
+              {/* What Happens Next Card */}
+              <div className="w-full rounded-2xl border border-white/5 bg-white/[0.02] p-5 text-left mb-8">
+                 <div className="flex items-center gap-2 mb-3">
+                    <ShieldCheck size={14} className="text-emerald-400" />
+                    <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">System Activated</span>
+                 </div>
+                 <ul className="space-y-3">
+                    {[
+                        "Billing status set to Active",
+                        "Nudge automation engine started",
+                        "Analytics dashboard unlocked"
+                    ].map((item, i) => (
+                        <li key={i} className="flex items-center gap-3 text-[13px] text-zinc-300">
+                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]" />
+                            {item}
+                        </li>
+                    ))}
+                 </ul>
+              </div>
 
-          <div className="rounded-2xl border border-emerald-500/30 bg-black/40 p-3 text-[11px] text-zinc-200">
-            <p className="font-medium text-emerald-100">
-              What happens next:
-            </p>
-            <ul className="mt-1 space-y-1.5 text-zinc-300">
-              <li>• Your billing status will be switched to Active.</li>
-              <li>• Trial Rescue will start sending nudges to inactive trials.</li>
-              <li>
-                • You&apos;ll see rescued trials and upgrades inside your
-                dashboard.
-              </li>
-            </ul>
-          </div>
+              {/* Actions */}
+              <div className="flex w-full flex-col gap-3">
+                 <Link 
+                    href="/app"
+                    className="group flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3.5 text-sm font-bold text-black transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                 >
+                    Enter Dashboard
+                    <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+                 </Link>
+                 
+                 <div className="flex items-center justify-between px-2 mt-2">
+                    <Link href="/billing" className="text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors">
+                        View Receipt
+                    </Link>
+                    <span className="flex items-center gap-2 text-[11px] text-zinc-600 font-mono">
+                       <Loader2 size={10} className="animate-spin" />
+                       Redirecting in {countdown}s
+                    </span>
+                 </div>
+              </div>
 
-          <p className="text-[11px] text-zinc-400">
-            If you don&apos;t see your account as Active within a short time,
-            reply to your welcome/payment email or reach out from the email you
-            used to sign up and we&apos;ll fix it.
-          </p>
-
-          <div className="flex flex-col gap-2 pt-1 text-[11px] md:flex-row md:items-center md:justify-between">
-            <div className="flex gap-2">
-              <Link
-                href="/app"
-                className="inline-flex items-center justify-center rounded-xl border border-emerald-400/70 bg-emerald-500/20 px-4 py-1.5 font-semibold text-emerald-50 hover:bg-emerald-500/30"
-              >
-                Go to dashboard →
-              </Link>
-              <Link
-                href="/billing"
-                className="inline-flex items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-1.5 text-zinc-100 hover:border-zinc-500"
-              >
-                View billing
-              </Link>
-            </div>
-            <p className="text-[10px] text-zinc-500">
-              You&apos;ll be redirected to the dashboard in a few seconds.
-            </p>
-          </div>
+           </div>
         </div>
+
+        {/* Footer Support Note */}
+        <p className="mt-8 text-center text-[11px] text-zinc-600 max-w-sm mx-auto">
+           If your account doesn't update immediately, don't worry. It can take a few moments to sync. Refresh the page or contact support.
+        </p>
+
       </div>
     </div>
   );
