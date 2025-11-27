@@ -11,37 +11,30 @@ type DodoWebhookEvent = {
 const WEBHOOK_SECRET = process.env.DODO_PAYMENTS_WEBHOOK_SECRET;
 
 function verifySignature(rawBody: string, req: NextRequest): boolean {
-  if (!WEBHOOK_SECRET) {
-    console.error("Missing DODO_PAYMENTS_WEBHOOK_SECRET");
-    return false;
-  }
+  if (!WEBHOOK_SECRET) return false;
 
   const id = req.headers.get("webhook-id");
   const timestamp = req.headers.get("webhook-timestamp");
-  const signature = req.headers.get("webhook-signature");
+  const signatureHeader = req.headers.get("webhook-signature");
 
-  if (!id || !timestamp || !signature) {
-    console.error("Missing webhook headers");
-    return false;
-  }
+  if (!id || !timestamp || !signatureHeader) return false;
 
-  // Standard Webhooks format: "<id>.<timestamp>.<payload>"
-  // Dodo docs: use HMAC-SHA256 over id.timestamp.payload :contentReference[oaicite:1]{index=1}
+  // Signature format: "v1,<base64>"
+  const [version, signature] = signatureHeader.split(",");
+  if (version !== "v1") return false;
+
   const message = `${id}.${timestamp}.${rawBody}`;
 
-  const hmac = crypto.createHmac("sha256", WEBHOOK_SECRET);
-  hmac.update(message, "utf8");
-  const expected = hmac.digest("hex");
+  const expectedHmac = crypto
+    .createHmac("sha256", WEBHOOK_SECRET)
+    .update(message, "utf8")
+    .digest(); // raw bytes (no encoding)
 
-  try {
-    const sigBuf = Buffer.from(signature, "hex");
-    const expBuf = Buffer.from(expected, "hex");
-    if (sigBuf.length !== expBuf.length) return false;
-    return crypto.timingSafeEqual(sigBuf, expBuf);
-  } catch (err) {
-    console.error("Error comparing signatures", err);
-    return false;
-  }
+  const receivedHmac = Buffer.from(signature, "base64");
+
+  if (expectedHmac.length !== receivedHmac.length) return false;
+
+  return crypto.timingSafeEqual(expectedHmac, receivedHmac);
 }
 
 // activate a project from a Dodo event
