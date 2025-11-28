@@ -186,7 +186,7 @@ export async function GET(_req: NextRequest) {
 
         try {
           const emailRes = await resend.emails.send({
-            from: `${productName} <trialrescue.qzz.io>`,
+            from: `${productName} <mail@trialrescue.qzz.io>`,
             to: item.email,
             subject,
             html,
