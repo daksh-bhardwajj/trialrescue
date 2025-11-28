@@ -42,7 +42,7 @@ function formatRelativeTime(iso: string | null): string {
   return `${diffD}d ago`;
 }
 
-const API_BASE_URL = "https://your-trialrescue-domain.com";
+const API_BASE_URL = "https://trialrescue.vercel.app";
 
 // --- UI Components ---
 
@@ -224,11 +224,10 @@ export default function IntegrationPage() {
     }
   };
 
-  // --- Snippets ---
   const curlSignup = apiKey
     ? `curl -X POST ${API_BASE_URL}/api/events \\
   -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer ${apiKey}" \\
+  -H "x-trialrescue-api-key: ${apiKey}" \\
   -d '{
     "event_type": "user_signed_up",
     "external_user_id": "123",
@@ -236,12 +235,13 @@ export default function IntegrationPage() {
   }'`
     : "Generating snippet...";
 
+  // ADDED QUOTES around ${apiKey}
   const jsSignup = apiKey
     ? `const response = await fetch("${API_BASE_URL}/api/events", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
-    "Authorization": "Bearer ${apiKey}"
+    "x-trialrescue-api-key": "${apiKey}", 
   },
   body: JSON.stringify({
     event_type: "user_signed_up",
@@ -259,7 +259,7 @@ curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_HTTPHEADER => [
         "Content-Type: application/json",
-        "Authorization: " . "Bearer ${apiKey}",
+        "x-trialrescue-api-key: ${apiKey}",
     ],
     CURLOPT_POSTFIELDS => json_encode([
         "event_type" => "user_signed_up",
@@ -271,13 +271,14 @@ $response = curl_exec($ch);
 curl_close($ch);`
     : "Generating snippet...";
 
+  // ADDED QUOTES around ${apiKey}
   const jsActivity = apiKey
     ? `// Track usage to identify engaged users
 await fetch("${API_BASE_URL}/api/events", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
-    "Authorization": "Bearer ${apiKey}"
+    "x-trialrescue-api-key": "${apiKey}",
   },
   body: JSON.stringify({
     event_type: "user_activity",
@@ -287,20 +288,21 @@ await fetch("${API_BASE_URL}/api/events", {
 });`
     : "...";
 
+  // ADDED QUOTES around ${apiKey}
   const jsUpgrade = apiKey
     ? `// Track conversions to measure ROI
 await fetch("${API_BASE_URL}/api/events", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
-    "Authorization": "Bearer ${apiKey}"
+    "x-trialrescue-api-key": "${apiKey}",
   },
   body: JSON.stringify({
     event_type: "user_upgraded",
     external_user_id: user.id,
     data: { plan: "pro", amount: 29 }
   })
-});`
+});` 
     : "...";
 
 

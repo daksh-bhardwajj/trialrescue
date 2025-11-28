@@ -4,115 +4,144 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*", // for testing; later you can restrict
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+type IncomingEventType = "user_signed_up" | "user_activity" | "user_upgraded";
+
+type IncomingBody = {
+  event: IncomingEventType;
+  user: {
+    id: string;    // external user id in the founder's app
+    email: string; // user's email in the founder's app
+  };
+  occurredAt?: string; // optional ISO string; defaults to now
 };
 
-export async function OPTIONS() {
-  return NextResponse.json({}, { headers: corsHeaders });
+function badRequest(msg: string) {
+  return NextResponse.json({ error: msg }, { status: 400 });
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const auth = req.headers.get("authorization");
-    if (!auth || !auth.startsWith("Bearer ")) {
+    // 1) Verify API key from header (this is the "3.1 Headers" part)
+    const apiKey = req.headers.get("x-trialrescue-api-key");
+    if (!apiKey) {
       return NextResponse.json(
-        { error: "Missing API key" },
-        { status: 401, headers: corsHeaders }
+        { error: "Missing x-trialrescue-api-key header" },
+        { status: 401 }
       );
     }
 
-    const apiKey = auth.split(" ")[1];
-
-    // 1) Resolve project by API key
-    const { data: project, error: keyErr } = await supabaseAdmin
+    // Look up project by api_key
+    const { data: project, error: projectError } = await supabaseAdmin
       .from("projects")
-      .select("id")
+      .select("id, billing_status")
       .eq("api_key", apiKey)
-      .single();
+      .maybeSingle();
 
-    if (keyErr || !project) {
+    if (projectError) {
+      console.error("events: error looking up project by api_key", projectError);
       return NextResponse.json(
-        { error: "Invalid API key" },
-        { status: 401, headers: corsHeaders }
+        { error: "Project lookup failed" },
+        { status: 500 }
       );
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body || !body.event_type) {
+    if (!project) {
+      return NextResponse.json({ error: "Invalid API key" }, { status: 401 });
+    }
+
+    const projectId = project.id as string;
+
+    // 2) Parse body
+    const body = (await req.json().catch(() => null)) as IncomingBody | null;
+    if (!body) return badRequest("Invalid JSON body");
+
+    const { event, user, occurredAt } = body;
+
+    if (!event || !user || !user.id || !user.email) {
+      return badRequest("Missing event or user information");
+    }
+
+    if (
+      event !== "user_signed_up" &&
+      event !== "user_activity" &&
+      event !== "user_upgraded"
+    ) {
+      return badRequest("Unsupported event type");
+    }
+
+    const ts = occurredAt ? new Date(occurredAt) : new Date();
+    if (Number.isNaN(ts.getTime())) {
+      return badRequest("Invalid occurredAt timestamp");
+    }
+    const tsIso = ts.toISOString();
+
+    // 3) Upsert into project_users
+    // NOTE: we ignore any project_id from client, we trust only api_key → project.id
+
+    const { data: existingUser, error: existingError } = await supabaseAdmin
+      .from("project_users")
+      .select(
+        "id, trial_started_at, last_activity_at, upgraded_at, unsubscribed"
+      )
+      .eq("project_id", projectId)
+      .eq("external_user_id", user.id)
+      .maybeSingle();
+
+    if (existingError) {
+      console.error("events: error loading project_user", existingError);
       return NextResponse.json(
-        { error: "Missing event_type" },
-        { status: 400, headers: corsHeaders }
+        { error: "Error loading user" },
+        { status: 500 }
       );
     }
 
-    const { event_type, external_user_id, email, data } = body;
+    let trial_started_at = existingUser?.trial_started_at || null;
+    let last_activity_at = existingUser?.last_activity_at || null;
+    let upgraded_at = existingUser?.upgraded_at || null;
 
-    if (!external_user_id) {
-      return NextResponse.json(
-        { error: "Missing external_user_id" },
-        { status: 400, headers: corsHeaders }
-      );
+    if (event === "user_signed_up") {
+      if (!trial_started_at) trial_started_at = tsIso;
+      last_activity_at = tsIso;
+    } else if (event === "user_activity") {
+      last_activity_at = tsIso;
+    } else if (event === "user_upgraded") {
+      upgraded_at = tsIso;
     }
 
-    const nowIso = new Date().toISOString();
-
-    // 2) Upsert project_users record (or create if not exists)
-    const userPayload: any = {
-      project_id: project.id,
-      external_user_id,
+    const upsertPayload = {
+      project_id: projectId,
+      external_user_id: user.id,
+      email: user.email,
+      trial_started_at,
+      last_activity_at,
+      upgraded_at,
+      unsubscribed: existingUser?.unsubscribed ?? false,
     };
 
-    if (email) {
-      userPayload.email = email;
-    }
-
-    if (event_type === "user_signed_up") {
-      userPayload.trial_started_at = nowIso;
-      userPayload.last_activity_at = nowIso;
-    } else if (event_type === "user_activity") {
-      userPayload.last_activity_at = nowIso;
-    } else if (event_type === "user_upgraded") {
-      userPayload.upgraded_at = nowIso;
-    }
-
-    const { data: userRow, error: userError } = await supabaseAdmin
+    const { error: upsertError } = await supabaseAdmin
       .from("project_users")
-      .upsert(userPayload, {
+      .upsert(upsertPayload, {
         onConflict: "project_id,external_user_id",
-      })
-      .select("id")
-      .single();
+      });
 
-    if (userError || !userRow) {
-      console.error("events: error upserting project_users", userError);
+    if (upsertError) {
+      console.error("events: error upserting project_user", upsertError);
       return NextResponse.json(
-        { error: "Failed to upsert user" },
-        { status: 500, headers: corsHeaders }
+        { error: "Error saving user state" },
+        { status: 500 }
       );
     }
 
-    // 3) Insert event row tied to this user
-    const { error: eventError } = await supabaseAdmin.from("events").insert({
-      project_id: project.id,
-      user_id: userRow.id,
-      event_type,
-      data: data || null,
-    });
-
-    if (eventError) {
-      console.error("events: error inserting event", eventError);
-      // Non-fatal for the caller; we still return ok: true because user state is updated
-    }
-
-    return NextResponse.json({ ok: true }, { headers: corsHeaders });
-  } catch (err) {
-    console.error("events: server error", err);
+    return NextResponse.json({ ok: true });
+  } catch (err: any) {
+    console.error("events: fatal error", err);
     return NextResponse.json(
-      { error: "Server error" },
-      { status: 500, headers: corsHeaders }
+      { error: "Server error", details: String(err) },
+      { status: 500 }
     );
   }
+}
+
+export function GET() {
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
