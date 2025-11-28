@@ -382,6 +382,42 @@ export default function Page() {
     loadBilling();
   }, [projectId]);
 
+  // Inside Page component, after existing hooks:
+useEffect(() => {
+  async function ensureOwnerEmail() {
+    if (!projectId) return;
+
+    // get current authenticated user
+    const {
+      data: { user },
+      error,
+    } = await supabaseBrowser.auth.getUser();
+
+    if (error || !user?.email) {
+      console.log("No user email available for owner_email patch", error);
+      return;
+    }
+
+    try {
+      await fetch("/api/internal/project/owner-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          project_id: projectId,
+          email: user.email,
+        }),
+      });
+    } catch (e) {
+      console.error("Failed to ensure owner_email", e);
+    }
+  }
+
+  ensureOwnerEmail();
+}, [projectId]);
+
+
   // --- iOS Style Loading State ---
   if (loadingProject || loadingBilling) {
     return (

@@ -292,7 +292,7 @@ export default function BillingPage() {
                <div className="rounded-[24px] border border-white/[0.08] bg-[#0A0A0A] p-6 backdrop-blur-sm">
                   <h3 className="text-sm font-bold text-white mb-4">Workspace</h3>
                   <div className="space-y-2">
-                     <Link href="/" className="group flex w-full items-center justify-between rounded-xl bg-white/[0.03] px-4 py-3 text-[12px] text-zinc-300 transition-colors hover:bg-white/[0.06] hover:text-white">
+                     <Link href="/app" className="group flex w-full items-center justify-between rounded-xl bg-white/[0.03] px-4 py-3 text-[12px] text-zinc-300 transition-colors hover:bg-white/[0.06] hover:text-white">
                         <span>Go to Dashboard</span>
                         <ArrowRight size={12} className="opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0" />
                      </Link>
