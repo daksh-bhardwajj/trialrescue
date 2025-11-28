@@ -504,7 +504,7 @@ useEffect(() => {
                 href="/"
                 icon={LayoutDashboard}
                 label="Overview"
-                isActive={pathname === "/"}
+                isActive={pathname === "/app"}
               />
               <NavItem
                 href="/integration"
