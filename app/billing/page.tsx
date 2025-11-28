@@ -233,10 +233,6 @@ export default function BillingPage() {
                                 <ShieldCheck size={12} />
                                 <span>Secure Payment</span>
                             </div>
-                            <div className="flex items-center gap-1.5 text-[10px] text-zinc-400">
-                                <Lock size={12} />
-                                <span>Money-back Guarantee</span>
-                            </div>
                         </div>
                    )}
                 </div>

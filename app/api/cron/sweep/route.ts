@@ -13,6 +13,7 @@ import {
 } from "@/lib/emailTemplates";
 
 const resendApiKey = process.env.RESEND_API_KEY;
+const CRON_SECRET = process.env.CRON_SWEEP_SECRET; // optional - set in env
 
 if (!resendApiKey) {
   console.warn("RESEND_API_KEY is not set. Cron emails will fail.");
@@ -25,7 +26,15 @@ function diffDays(a: Date, b: Date): number {
   return Math.floor(ms / (1000 * 60 * 60 * 24));
 }
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
+  // Optional: require internal secret so randoms can't trigger sweeps
+  if (CRON_SECRET) {
+    const header = req.headers.get("x-cron-secret");
+    if (!header || header !== CRON_SECRET) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+
   if (!resend) {
     console.error("Cron: RESEND client not configured");
     return NextResponse.json(
@@ -35,7 +44,7 @@ export async function GET(_req: NextRequest) {
   }
 
   try {
-    // 1) Load all projects that have trial settings and automation enabled
+    // 1) Load all projects that have trial settings
     const { data: settingsRows, error: settingsError } = await supabaseAdmin
       .from("trial_settings")
       .select("*");
@@ -57,13 +66,50 @@ export async function GET(_req: NextRequest) {
     }
 
     let totalSent = 0;
-    const perProject: { project_id: string; sent: number }[] = [];
+    const perProject: { project_id: string; sent: number; reason?: string }[] =
+      [];
 
     // 2) Iterate each project and run sweep
     for (const settings of settingsRows) {
       const projectId = String(settings.project_id);
+
+      // 2a) Check billing status for this project
+      const { data: project, error: projectError } = await supabaseAdmin
+        .from("projects")
+        .select("billing_status")
+        .eq("id", projectId)
+        .maybeSingle();
+
+      if (projectError) {
+        console.error(
+          `Cron: error loading project billing for project ${projectId}`,
+          projectError
+        );
+        perProject.push({
+          project_id: projectId,
+          sent: 0,
+          reason: "billing_lookup_error",
+        });
+        continue;
+      }
+
+      if (!project || project.billing_status !== "active") {
+        // 🔐 Paywall: skip unpaid / free / cancelled projects
+        perProject.push({
+          project_id: projectId,
+          sent: 0,
+          reason: "billing_inactive",
+        });
+        continue;
+      }
+
+      // 2b) Check if automation is enabled
       if (!settings.automation_enabled) {
-        perProject.push({ project_id: projectId, sent: 0 });
+        perProject.push({
+          project_id: projectId,
+          sent: 0,
+          reason: "automation_disabled",
+        });
         continue;
       }
 
@@ -73,7 +119,7 @@ export async function GET(_req: NextRequest) {
       const appUrl: string =
         settings.app_url || "https://your-saas-app.com/dashboard";
 
-      // Load users for THIS project
+      // 3) Load users for THIS project
       const { data: users, error: usersError } = await supabaseAdmin
         .from("project_users")
         .select(
@@ -86,16 +132,24 @@ export async function GET(_req: NextRequest) {
           `Cron: error loading project_users for project ${projectId}`,
           usersError
         );
-        perProject.push({ project_id: projectId, sent: 0 });
+        perProject.push({
+          project_id: projectId,
+          sent: 0,
+          reason: "user_load_error",
+        });
         continue;
       }
 
       if (!users || users.length === 0) {
-        perProject.push({ project_id: projectId, sent: 0 });
+        perProject.push({
+          project_id: projectId,
+          sent: 0,
+          reason: "no_users",
+        });
         continue;
       }
 
-      // Load previous email logs for THIS project
+      // 4) Load previous email logs for THIS project
       const { data: logs, error: logsError } = await supabaseAdmin
         .from("email_logs")
         .select("user_id, email_type")
@@ -106,14 +160,15 @@ export async function GET(_req: NextRequest) {
           `Cron: error loading email_logs for project ${projectId}`,
           logsError
         );
-        perProject.push({ project_id: projectId, sent: 0 });
+        perProject.push({
+          project_id: projectId,
+          sent: 0,
+          reason: "log_load_error",
+        });
         continue;
       }
 
-      const sentByUser = new Map<
-        string,
-        Set<"nudge1" | "nudge2" | "nudge3">
-      >();
+      const sentByUser = new Map<string, Set<"nudge1" | "nudge2" | "nudge3">>();
 
       (logs || []).forEach((log: any) => {
         const uid = String(log.user_id);
@@ -132,7 +187,7 @@ export async function GET(_req: NextRequest) {
         nudge: NudgeKind;
       }[] = [];
 
-      // Determine which users in THIS project should get which nudge
+      // 5) Determine which users in THIS project should get which nudge
       for (const user of users) {
         if (!user.email) continue;
         if (user.unsubscribed) continue;
@@ -166,13 +221,17 @@ export async function GET(_req: NextRequest) {
       }
 
       if (candidates.length === 0) {
-        perProject.push({ project_id: projectId, sent: 0 });
+        perProject.push({
+          project_id: projectId,
+          sent: 0,
+          reason: "no_candidates",
+        });
         continue;
       }
 
       let sentForProject = 0;
 
-      // Send + log for this project
+      // 6) Send + log for this project
       for (const item of candidates) {
         const subject = getNudgeSubject(item.nudge, productName);
         const html = getNudgeBodyHtml(item.nudge, productName).replace(
@@ -196,9 +255,7 @@ export async function GET(_req: NextRequest) {
           });
 
           const providerMessageId =
-            (emailRes as any)?.data?.id ||
-            (emailRes as any)?.id ||
-            null;
+            (emailRes as any)?.data?.id || (emailRes as any)?.id || null;
 
           const { error: logError } = await supabaseAdmin
             .from("email_logs")
@@ -229,7 +286,11 @@ export async function GET(_req: NextRequest) {
       perProject.push({ project_id: projectId, sent: sentForProject });
     }
 
-    return NextResponse.json({ ok: true, total_sent: totalSent, per_project: perProject });
+    return NextResponse.json({
+      ok: true,
+      total_sent: totalSent,
+      per_project: perProject,
+    });
   } catch (err) {
     console.error("Cron: fatal error", err);
     return NextResponse.json(

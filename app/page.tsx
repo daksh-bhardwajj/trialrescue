@@ -644,7 +644,7 @@ export default function LandingPage() {
                    />
                    <FaqItem 
                       question="Do I need a credit card for the Early Bird?" 
-                      answer="Yes, it's a direct checkout link via our payment provider. However, we offer a 14-day refund policy if you're not satisfied with the results." 
+                      answer="Yes, it's a direct checkout link via our payment provider." 
                    />
                    <FaqItem 
                       question="Can I customize the email timing?" 
