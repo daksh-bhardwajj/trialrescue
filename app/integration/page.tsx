@@ -184,7 +184,7 @@ export default function IntegrationPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
+          "x-trialrescue-api-key": `${apiKey}`,
         },
         body: JSON.stringify({
           event_type: "user_signed_up",
