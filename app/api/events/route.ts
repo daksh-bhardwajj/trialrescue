@@ -1,22 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// app/api/events/route.ts
-
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
+// Standardized flat structure matching the Client & Documentation
 type IncomingEventType = "user_signed_up" | "user_activity" | "user_upgraded";
 
 type IncomingBody = {
-  event: IncomingEventType;
-  user: {
-    id: string;    // external user id in the founder's app
-    email: string; // user's email in the founder's app
-  };
-  occurredAt?: string; // optional ISO string; defaults to now
+  event_type: IncomingEventType;
+  external_user_id: string; // The ID in your (the developer's) app
+  email?: string;           // Optional for activity, required for signup usually
+  properties?: any;         // Optional metadata
+  occurred_at?: string;     // Optional ISO string
 };
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*", // you can restrict later
+  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, x-trialrescue-api-key",
 };
@@ -32,7 +30,6 @@ function badRequest(msg: string) {
 }
 
 export async function OPTIONS() {
-  // Allow preflight
   return new NextResponse(null, {
     status: 204,
     headers: corsHeaders,
@@ -41,105 +38,101 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   try {
-    // 1) Verify API key from header
+    // 1) Verify API key
     const apiKey = req.headers.get("x-trialrescue-api-key");
     if (!apiKey) {
-      console.error("events: missing x-trialrescue-api-key");
       return new NextResponse(
         JSON.stringify({ error: "Missing x-trialrescue-api-key header" }),
         { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // Look up project by api_key
+    // Lookup Project
     const { data: project, error: projectError } = await supabaseAdmin
       .from("projects")
-      .select("id, billing_status, api_key")
+      .select("id, billing_status")
       .eq("api_key", apiKey)
       .maybeSingle();
 
-    if (projectError) {
-      console.error("events: error looking up project by api_key", projectError);
+    if (projectError || !project) {
       return new NextResponse(
-        JSON.stringify({ error: "Project lookup failed" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    if (!project) {
-      console.error("events: invalid api_key", apiKey);
-      return new NextResponse(
-        JSON.stringify({ error: "Invalid API key" }),
+        JSON.stringify({ error: "Invalid API Key" }),
         { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    const projectId = project.id as string;
+    const projectId = project.id;
 
-    // 2) Parse body
+    // 2) Parse Body
     const body = (await req.json().catch(() => null)) as IncomingBody | null;
     if (!body) return badRequest("Invalid JSON body");
 
-    const { event, user, occurredAt } = body;
+    // Destructure flat fields
+    const { event_type, external_user_id, email, occurred_at } = body;
 
-    if (!event || !user || !user.id || !user.email) {
-      return badRequest("Missing event or user information");
+    // Validation
+    if (!event_type || !external_user_id) {
+      return badRequest("Missing required fields: event_type or external_user_id");
     }
 
-    if (
-      event !== "user_signed_up" &&
-      event !== "user_activity" &&
-      event !== "user_upgraded"
-    ) {
-      return badRequest("Unsupported event type");
+    // Specific validation for signup
+    if (event_type === "user_signed_up" && !email) {
+      return badRequest("Email is required for user_signed_up events");
     }
 
-    const ts = occurredAt ? new Date(occurredAt) : new Date();
+    const validEvents = ["user_signed_up", "user_activity", "user_upgraded"];
+    if (!validEvents.includes(event_type)) {
+      return badRequest(`Unsupported event_type. Must be one of: ${validEvents.join(", ")}`);
+    }
+
+    const ts = occurred_at ? new Date(occurred_at) : new Date();
     if (Number.isNaN(ts.getTime())) {
-      return badRequest("Invalid occurredAt timestamp");
+      return badRequest("Invalid occurred_at timestamp");
     }
     const tsIso = ts.toISOString();
 
-    // 3) Upsert into project_users (we ignore any client-sent project_id)
-    const { data: existingUser, error: existingError } = await supabaseAdmin
+    // 3) Upsert into project_users
+    // First, check if user exists to preserve existing dates if not provided
+    const { data: existingUser } = await supabaseAdmin
       .from("project_users")
-      .select(
-        "id, trial_started_at, last_activity_at, upgraded_at, unsubscribed"
-      )
+      .select("trial_started_at, last_activity_at, upgraded_at, unsubscribed")
       .eq("project_id", projectId)
-      .eq("external_user_id", user.id)
+      .eq("external_user_id", external_user_id)
       .maybeSingle();
-
-    if (existingError) {
-      console.error("events: error loading project_user", existingError);
-      return new NextResponse(
-        JSON.stringify({ error: "Error loading user" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
 
     let trial_started_at = existingUser?.trial_started_at || null;
     let last_activity_at = existingUser?.last_activity_at || null;
     let upgraded_at = existingUser?.upgraded_at || null;
+    const unsubscribed = existingUser?.unsubscribed ?? false;
 
-    if (event === "user_signed_up") {
+    // Update logic based on event type
+    if (event_type === "user_signed_up") {
+      // If trial hasn't started, start it now. 
+      // If they already exist, we generally don't reset trial start unless explicitly handled, 
+      // but here we ensure they are tracked.
       if (!trial_started_at) trial_started_at = tsIso;
+      last_activity_at = tsIso; 
+    } else if (event_type === "user_activity") {
       last_activity_at = tsIso;
-    } else if (event === "user_activity") {
-      last_activity_at = tsIso;
-    } else if (event === "user_upgraded") {
+    } else if (event_type === "user_upgraded") {
       upgraded_at = tsIso;
+      last_activity_at = tsIso; // Upgrading counts as activity
     }
 
-    const upsertPayload = {
+    // Prepare payload
+    const upsertPayload: any = {
       project_id: projectId,
-      external_user_id: user.id,
-      email: user.email,
+      external_user_id,
       trial_started_at,
       last_activity_at,
       upgraded_at,
-      unsubscribed: existingUser?.unsubscribed ?? false,
+      unsubscribed
     };
+
+    // Only update email if provided (don't overwrite with null on activity events)
+    if (email) {
+      upsertPayload.email = email;
+    }
 
     const { error: upsertError } = await supabaseAdmin
       .from("project_users")
@@ -150,7 +143,7 @@ export async function POST(req: NextRequest) {
     if (upsertError) {
       console.error("events: error upserting project_user", upsertError);
       return new NextResponse(
-        JSON.stringify({ error: "Error saving user state" }),
+        JSON.stringify({ error: "Error saving user state", details: upsertError.message }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -159,6 +152,7 @@ export async function POST(req: NextRequest) {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
+
   } catch (err: any) {
     console.error("events: fatal error", err);
     return new NextResponse(
