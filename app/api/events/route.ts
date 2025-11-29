@@ -1,27 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+// app/api/events/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-// Standardized flat structure matching the Client & Documentation
-type IncomingEventType = "user_signed_up" | "user_activity" | "user_upgraded";
-
-type IncomingBody = {
-  event_type: IncomingEventType;
-  external_user_id: string; // The ID in your (the developer's) app
-  email?: string;           // Optional for activity, required for signup usually
-  properties?: any;         // Optional metadata
-  occurred_at?: string;     // Optional ISO string
-};
+type NormalizedEventType = "user_signed_up" | "user_activity" | "user_upgraded";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "*", // you can restrict this later
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, x-trialrescue-api-key",
 };
 
-function badRequest(msg: string) {
-  return new NextResponse(JSON.stringify({ error: msg }), {
-    status: 400,
+function jsonResponse(body: any, status = 200) {
+  return new NextResponse(JSON.stringify(body), {
+    status,
     headers: {
       "Content-Type": "application/json",
       ...corsHeaders,
@@ -30,6 +23,7 @@ function badRequest(msg: string) {
 }
 
 export async function OPTIONS() {
+  // Preflight for browser requests
   return new NextResponse(null, {
     status: 204,
     headers: corsHeaders,
@@ -38,101 +32,137 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   try {
-    // 1) Verify API key
+    // 1) API key from header
     const apiKey = req.headers.get("x-trialrescue-api-key");
     if (!apiKey) {
-      return new NextResponse(
-        JSON.stringify({ error: "Missing x-trialrescue-api-key header" }),
-        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      console.error("events: missing x-trialrescue-api-key");
+      return jsonResponse(
+        { error: "Missing x-trialrescue-api-key header" },
+        401
       );
     }
 
-    // Lookup Project
+    // 2) Find project via api_key
     const { data: project, error: projectError } = await supabaseAdmin
       .from("projects")
-      .select("id, billing_status")
+      .select("id, billing_status, api_key")
       .eq("api_key", apiKey)
       .maybeSingle();
 
-    if (projectError || !project) {
-      return new NextResponse(
-        JSON.stringify({ error: "Invalid API Key" }),
-        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+    if (projectError) {
+      console.error("events: project lookup error", projectError);
+      return jsonResponse({ error: "Project lookup failed" }, 500);
+    }
+
+    if (!project) {
+      console.error("events: invalid api_key", apiKey);
+      return jsonResponse({ error: "Invalid API key" }, 401);
+    }
+
+    const projectId = project.id as string;
+
+    // 3) Parse body (support BOTH old and new formats)
+
+    const raw = await req.json().catch(() => null);
+    if (!raw || typeof raw !== "object") {
+      return jsonResponse({ error: "Invalid JSON body" }, 400);
+    }
+
+    let eventType: NormalizedEventType | null = null;
+    let externalUserId: string | null = null;
+    let email: string | null = null;
+    let occurredAt: string | undefined = undefined;
+
+    // Format A: what your integration page currently sends:
+    // {
+    //   "event_type": "user_signed_up",
+    //   "external_user_id": "xxx",
+    //   "email": "test@example.com"
+    // }
+    if ("event_type" in raw || "external_user_id" in raw) {
+      const et = String((raw as any).event_type || "").trim();
+      if (et === "user_signed_up" || et === "user_activity" || et === "user_upgraded") {
+        eventType = et;
+      }
+
+      externalUserId = (raw as any).external_user_id
+        ? String((raw as any).external_user_id)
+        : null;
+      email = (raw as any).email ? String((raw as any).email) : null;
+      occurredAt = (raw as any).occurredAt || (raw as any).occurred_at;
+    }
+
+    // Format B: newer style:
+    // {
+    //   "event": "user_signed_up",
+    //   "user": { "id": "xxx", "email": "..." },
+    //   "occurredAt": "..."
+    // }
+    if (!eventType && "event" in raw && "user" in raw) {
+      const et = String((raw as any).event || "").trim();
+      if (et === "user_signed_up" || et === "user_activity" || et === "user_upgraded") {
+        eventType = et as NormalizedEventType;
+      }
+      const user = (raw as any).user || {};
+      externalUserId = user.id ? String(user.id) : null;
+      email = user.email ? String(user.email) : null;
+      occurredAt = (raw as any).occurredAt;
+    }
+
+    if (!eventType) {
+      return jsonResponse({ error: "Unsupported or missing event type" }, 400);
+    }
+
+    if (!externalUserId || !email) {
+      return jsonResponse(
+        { error: "Missing external_user_id or email" },
+        400
       );
     }
 
-    const projectId = project.id;
-
-    // 2) Parse Body
-    const body = (await req.json().catch(() => null)) as IncomingBody | null;
-    if (!body) return badRequest("Invalid JSON body");
-
-    // Destructure flat fields
-    const { event_type, external_user_id, email, occurred_at } = body;
-
-    // Validation
-    if (!event_type || !external_user_id) {
-      return badRequest("Missing required fields: event_type or external_user_id");
-    }
-
-    // Specific validation for signup
-    if (event_type === "user_signed_up" && !email) {
-      return badRequest("Email is required for user_signed_up events");
-    }
-
-    const validEvents = ["user_signed_up", "user_activity", "user_upgraded"];
-    if (!validEvents.includes(event_type)) {
-      return badRequest(`Unsupported event_type. Must be one of: ${validEvents.join(", ")}`);
-    }
-
-    const ts = occurred_at ? new Date(occurred_at) : new Date();
+    const ts = occurredAt ? new Date(occurredAt) : new Date();
     if (Number.isNaN(ts.getTime())) {
-      return badRequest("Invalid occurred_at timestamp");
+      return jsonResponse({ error: "Invalid occurredAt timestamp" }, 400);
     }
     const tsIso = ts.toISOString();
 
-    // 3) Upsert into project_users
-    // First, check if user exists to preserve existing dates if not provided
-    const { data: existingUser } = await supabaseAdmin
+    // 4) Load existing user row (if any)
+    const { data: existingUser, error: existingError } = await supabaseAdmin
       .from("project_users")
-      .select("trial_started_at, last_activity_at, upgraded_at, unsubscribed")
+      .select(
+        "id, trial_started_at, last_activity_at, upgraded_at, unsubscribed"
+      )
       .eq("project_id", projectId)
-      .eq("external_user_id", external_user_id)
+      .eq("external_user_id", externalUserId)
       .maybeSingle();
+
+    if (existingError) {
+      console.error("events: error loading project_user", existingError);
+      return jsonResponse({ error: "Error loading user" }, 500);
+    }
 
     let trial_started_at = existingUser?.trial_started_at || null;
     let last_activity_at = existingUser?.last_activity_at || null;
     let upgraded_at = existingUser?.upgraded_at || null;
-    const unsubscribed = existingUser?.unsubscribed ?? false;
 
-    // Update logic based on event type
-    if (event_type === "user_signed_up") {
-      // If trial hasn't started, start it now. 
-      // If they already exist, we generally don't reset trial start unless explicitly handled, 
-      // but here we ensure they are tracked.
+    if (eventType === "user_signed_up") {
       if (!trial_started_at) trial_started_at = tsIso;
-      last_activity_at = tsIso; 
-    } else if (event_type === "user_activity") {
       last_activity_at = tsIso;
-    } else if (event_type === "user_upgraded") {
+    } else if (eventType === "user_activity") {
+      last_activity_at = tsIso;
+    } else if (eventType === "user_upgraded") {
       upgraded_at = tsIso;
-      last_activity_at = tsIso; // Upgrading counts as activity
     }
 
-    // Prepare payload
-    const upsertPayload: any = {
+    const upsertPayload = {
       project_id: projectId,
-      external_user_id,
+      external_user_id: externalUserId,
+      email,
       trial_started_at,
       last_activity_at,
       upgraded_at,
-      unsubscribed
+      unsubscribed: existingUser?.unsubscribed ?? false,
     };
-
-    // Only update email if provided (don't overwrite with null on activity events)
-    if (email) {
-      upsertPayload.email = email;
-    }
 
     const { error: upsertError } = await supabaseAdmin
       .from("project_users")
@@ -141,23 +171,16 @@ export async function POST(req: NextRequest) {
       });
 
     if (upsertError) {
-      console.error("events: error upserting project_user", upsertError);
-      return new NextResponse(
-        JSON.stringify({ error: "Error saving user state", details: upsertError.message }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+      console.error("events: upsert error", upsertError);
+      return jsonResponse({ error: "Error saving user state" }, 500);
     }
 
-    return new NextResponse(JSON.stringify({ ok: true }), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
-
+    return jsonResponse({ ok: true }, 200);
   } catch (err: any) {
     console.error("events: fatal error", err);
-    return new NextResponse(
-      JSON.stringify({ error: "Server error", details: String(err) }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+    return jsonResponse(
+      { error: "Server error", details: String(err) },
+      500
     );
   }
 }

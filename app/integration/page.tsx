@@ -19,6 +19,7 @@ import {
   Layers,
   Settings,
   LogOut,
+  Sparkles,
   ChevronLeft,
   Code2
 } from "lucide-react";
@@ -52,7 +53,7 @@ function NavItem({
   isActive,
 }: {
   href: string;
-  icon: React.ElementType;
+  icon: any;
   label: string;
   isActive?: boolean;
 }) {
@@ -178,36 +179,28 @@ export default function IntegrationPage() {
     setTestResult(null);
     setError(null);
 
-    const cleanKey = apiKey.trim();
-
     try {
       const res = await fetch("/api/events", {
         method: "POST",
-        cache: "no-store", 
         headers: {
           "Content-Type": "application/json",
-          "x-trialrescue-api-key": cleanKey,
+          "x-trialrescue-api-key": `${apiKey}`,
         },
-        // MATCHING SERVER EXPECTATIONS (Flat Structure)
         body: JSON.stringify({
           event_type: "user_signed_up",
           external_user_id: "trialrescue_test_user",
           email: "test@example.com",
-          properties: {
-             source: "integration_test_button"
-          }
         }),
       });
 
-      const json = await res.json().catch(() => ({ error: "Invalid JSON response from server" }));
+      const json = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(json.error || `Server Error (${res.status})`);
+        throw new Error(json.error || "Failed to send test event");
       }
 
       setTestResult("Event received successfully.");
 
-      // Refresh last event time
       const lastRes = await fetch(
         `/api/internal/project/last-event?projectId=${projectId}`
       );
@@ -216,7 +209,7 @@ export default function IntegrationPage() {
         setLastEventAt(lastJson.last_event_at);
       }
     } catch (err: any) {
-      console.error("Test Event Failed:", err);
+      console.error(err);
       setError(err.message || "Test event failed");
     } finally {
       setTestSending(false);
@@ -242,6 +235,7 @@ export default function IntegrationPage() {
   }'`
     : "Generating snippet...";
 
+  // ADDED QUOTES around ${apiKey}
   const jsSignup = apiKey
     ? `const response = await fetch("${API_BASE_URL}/api/events", {
   method: "POST",
@@ -277,6 +271,7 @@ $response = curl_exec($ch);
 curl_close($ch);`
     : "Generating snippet...";
 
+  // ADDED QUOTES around ${apiKey}
   const jsActivity = apiKey
     ? `// Track usage to identify engaged users
 await fetch("${API_BASE_URL}/api/events", {
@@ -288,11 +283,12 @@ await fetch("${API_BASE_URL}/api/events", {
   body: JSON.stringify({
     event_type: "user_activity",
     external_user_id: user.id,
-    properties: { action: "generated_report", items: 3 }
+    data: { action: "generated_report", items: 3 }
   })
 });`
     : "...";
 
+  // ADDED QUOTES around ${apiKey}
   const jsUpgrade = apiKey
     ? `// Track conversions to measure ROI
 await fetch("${API_BASE_URL}/api/events", {
@@ -304,7 +300,7 @@ await fetch("${API_BASE_URL}/api/events", {
   body: JSON.stringify({
     event_type: "user_upgraded",
     external_user_id: user.id,
-    properties: { plan: "pro", amount: 29 }
+    data: { plan: "pro", amount: 29 }
   })
 });` 
     : "...";
@@ -456,9 +452,9 @@ await fetch("${API_BASE_URL}/api/events", {
                       {apiKey || "Loading..."}
                    </div>
                    <button 
-                      onClick={handleCopyKey}
-                      className="shrink-0 rounded-lg bg-white/10 p-2 text-zinc-400 transition-colors hover:bg-white/20 hover:text-white"
-                      title="Copy API Key"
+                     onClick={handleCopyKey}
+                     className="shrink-0 rounded-lg bg-white/10 p-2 text-zinc-400 transition-colors hover:bg-white/20 hover:text-white"
+                     title="Copy API Key"
                    >
                       {copiedKey ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
                    </button>
@@ -481,10 +477,10 @@ await fetch("${API_BASE_URL}/api/events", {
                     </div>
                   )}
                   {error && (
-                      <div className="flex items-center gap-2 text-[12px] text-red-400 animate-in fade-in">
-                        <AlertCircle size={14} />
-                        {error}
-                      </div>
+                     <div className="flex items-center gap-2 text-[12px] text-red-400 animate-in fade-in">
+                       <AlertCircle size={14} />
+                       {error}
+                     </div>
                   )}
                 </div>
               </div>
