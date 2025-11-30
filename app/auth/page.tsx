@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-no-undef */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -13,8 +14,11 @@ import {
   Lock, 
   Briefcase,
   ChevronLeft,
-  Sparkles
+  Sparkles,
+  LoaderPinwheel,
+  LucideLoader
 } from "lucide-react";
+import Image from "next/image";
 
 export default function AuthPage() {
   const router = useRouter();
@@ -85,10 +89,6 @@ export default function AuthPage() {
         
         {/* Brand Header */}
         <div className="mb-8 flex flex-col items-center text-center">
-          <div className="relative mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.01] border border-white/[0.08] shadow-2xl backdrop-blur-xl">
-             <div className="absolute inset-0 bg-white/5 blur-xl rounded-full" />
-             <Zap size={28} className="relative z-10 text-white fill-white/20" />
-          </div>
           <h1 className="text-3xl font-bold tracking-tight text-white">
             {mode === "signup" ? "Create Account" : "Welcome Back"}
           </h1>
@@ -166,7 +166,7 @@ export default function AuthPage() {
               className="group relative flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-3.5 text-[13px] font-bold text-black transition-all hover:bg-zinc-200 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] active:scale-[0.98] disabled:opacity-70 disabled:hover:scale-100"
             >
               {loading ? (
-                <Loader2 size={18} className="animate-spin text-zinc-600" />
+                <LucideLoader size={18} className="animate-spin text-zinc-600" />
               ) : (
                 <>
                   {mode === "signup" ? "Get Started" : "Sign In"}

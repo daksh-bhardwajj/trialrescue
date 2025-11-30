@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 import { useCurrentProject } from "../hooks/useCurrentProject";
@@ -16,14 +17,14 @@ import {
   Loader2, 
   CheckCircle2, 
   AlertCircle,
-  Clock,
-  Calendar,
   LayoutDashboard,
   Layers,
   Settings as SettingsIcon,
   LogOut,
+  CreditCard,
   Sparkles,
-  ChevronLeft
+  ChevronLeft,
+  LucideLoader
 } from "lucide-react";
 
 // --- Types ---
@@ -39,7 +40,13 @@ type Settings = {
   support_email: string | null;
 };
 
-// --- Shared UI Components (Sidebar/Nav) ---
+type BillingInfo = {
+  id: string;
+  billing_status: string | null;
+  billing_plan: string | null;
+};
+
+// --- Shared UI Components ---
 
 function NavItem({
   href,
@@ -55,23 +62,23 @@ function NavItem({
   return (
     <Link
       href={href}
-      className={`group relative flex items-center gap-3.5 rounded-2xl px-4 py-3 text-[13px] font-medium transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+      className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-300 ease-out ${
         isActive
-          ? "bg-white/[0.08] text-white shadow-[0_0_20px_rgba(255,255,255,0.05)]"
+          ? "bg-white/[0.08] text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]"
           : "text-zinc-500 hover:bg-white/[0.03] hover:text-zinc-200"
       }`}
     >
-      {isActive && (
-        <div className="absolute left-0 h-6 w-1 rounded-r-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
-      )}
       <Icon
         size={18}
         strokeWidth={2}
-        className={`transition-transform duration-300 ${
-          isActive ? "scale-110 text-white" : "text-zinc-600 group-hover:scale-105 group-hover:text-zinc-400"
+        className={`transition-colors duration-300 ${
+          isActive ? "text-white" : "text-zinc-600 group-hover:text-zinc-400"
         }`}
       />
       <span className="relative z-10">{label}</span>
+      {isActive && (
+        <div className="absolute right-2 h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+      )}
     </Link>
   );
 }
@@ -86,6 +93,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [billing, setBilling] = useState<BillingInfo | null>(null);
 
   // --- Auth & Data Loading ---
 
@@ -106,15 +114,21 @@ export default function SettingsPage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(
-          `/api/internal/project/settings?projectId=${projectId}`
-        );
-        if (!res.ok) {
-          throw new Error("Failed to load settings");
+        const [settingsRes, billingRes] = await Promise.all([
+            fetch(`/api/internal/project/settings?projectId=${projectId}`),
+            fetch(`/api/internal/project/billing?projectId=${projectId}`)
+        ]);
+
+        if (!settingsRes.ok) throw new Error("Failed to load settings");
+        const settingsJson = await settingsRes.json();
+        
+        if (billingRes.ok) {
+            const billingJson = await billingRes.json();
+            setBilling(billingJson);
         }
-        const json = (await res.json()) as Settings;
+
         if (!cancelled) {
-          setSettings(json);
+          setSettings(settingsJson);
         }
       } catch (err: any) {
         console.error(err);
@@ -154,7 +168,7 @@ export default function SettingsPage() {
       }
 
       setSettings(json as Settings);
-      setSaveMessage("Changes saved successfully.");
+      setSaveMessage("Configuration saved.");
     } catch (err: any) {
       console.error(err);
       setError(err.message || "Failed to save settings");
@@ -169,22 +183,18 @@ export default function SettingsPage() {
     setSettings({ ...settings, [key]: value });
   }
 
-  // --- Loading State (iOS Style) ---
+  const isActive = billing?.billing_status === "active";
+
+  // --- Loading State ---
   if (loadingProject || (loading && !settings)) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black">
-         <div className="relative flex flex-col items-center justify-center">
-            <div className="absolute inset-0 -z-10 animate-ping rounded-full bg-white/5 opacity-20 duration-1000" />
-            <div className="relative flex h-20 w-20 items-center justify-center rounded-[2rem] bg-gradient-to-tr from-zinc-800 to-zinc-900 shadow-[0_0_40px_-10px_rgba(255,255,255,0.1)] ring-1 ring-white/10">
-               <Zap size={32} className="text-white fill-white animate-pulse" />
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#000000]">
+         <div className="flex flex-col items-center gap-6">
+            <div className="relative h-16 w-16 flex items-center justify-center rounded-2xl bg-white/[0.03] border border-white/[0.08]">
+                <SettingsIcon size={32} className="text-zinc-500 animate-spin duration-[3s]" />
             </div>
-            <div className="mt-8 flex flex-col items-center gap-2">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.25em] text-zinc-500 animate-pulse">
-                   Loading Config
-                </div>
             </div>
          </div>
-      </div>
     );
   }
 
@@ -207,34 +217,35 @@ export default function SettingsPage() {
   return (
     <div className="flex h-screen w-full bg-black font-sans text-zinc-100 selection:bg-white/20 overflow-hidden">
       
-      {/* Ambient Background */}
-      <div className="pointer-events-none fixed inset-0 z-0">
-          <div className="absolute top-[-20%] left-[-10%] h-[600px] w-[600px] rounded-full bg-purple-500/[0.02] blur-[120px]" />
-          <div className="absolute bottom-[-20%] right-[-10%] h-[500px] w-[500px] rounded-full bg-emerald-500/[0.02] blur-[120px]" />
-          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
-      </div>
-
       {/* Sidebar - Floating Dock */}
-      <aside className="relative z-20 hidden w-[280px] flex-col p-4 md:flex">
-        <div className="flex h-full flex-col justify-between rounded-[32px] border border-white/[0.06] bg-[#0A0A0A]/60 px-4 py-6 backdrop-blur-2xl shadow-2xl">
+      <aside className="relative z-20 hidden w-[260px] flex-col p-4 md:flex">
+        <div className="flex h-full flex-col justify-between rounded-[24px] border border-white/[0.08] bg-[#050505] px-4 py-6 shadow-2xl">
             <div className="space-y-8">
                 {/* Brand */}
-                <div className="flex items-center gap-4 px-2">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-white to-zinc-400 text-black shadow-lg shadow-white/10">
-                        <Zap size={20} fill="currentColor" />
+                <div className="flex items-center gap-3 px-2">
+                    <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-white p-1 text-black shadow-lg shadow-white/20">
+                      <Image
+                        src="/logo.png"
+                        alt="TrialRescue"
+                        fill
+                        className="object-contain"
+                      />
                     </div>
                     <div className="flex flex-col">
                         <span className="text-sm font-bold tracking-tight text-white">TrialRescue</span>
-                        <span className="text-[10px] font-medium text-zinc-500">Pro Workspace</span>
+                        <span className={`text-[10px] font-medium ${isActive ? "text-emerald-400" : "text-zinc-500"}`}>
+                          {isActive ? "Pro Workspace" : "Free Plan"}
+                        </span>
                     </div>
                 </div>
 
                 {/* Nav */}
                 <nav className="space-y-1">
-                    <div className="px-4 pb-2 text-[10px] font-bold uppercase tracking-widest text-zinc-600">Menu</div>
+                    <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-widest text-zinc-600">Menu</div>
                     <NavItem href="/app" icon={LayoutDashboard} label="Overview" isActive={pathname === "/app"} />
                     <NavItem href="/integration" icon={Layers} label="Integration" isActive={pathname === "/integration"} />
                     <NavItem href="/settings" icon={SettingsIcon} label="Settings" isActive={pathname === "/settings"} />
+                    <NavItem href="/billing" icon={isActive ? CreditCard : Sparkles} label={isActive ? "Billing" : "Upgrade"} isActive={pathname === "/billing"} />
                 </nav>
             </div>
 
@@ -253,7 +264,7 @@ export default function SettingsPage() {
 
       {/* Main Content Area */}
       <main className="relative z-10 flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth">
-         <div className="mx-auto max-w-4xl animate-in slide-in-from-bottom-8 fade-in duration-700 space-y-8">
+         <div className="mx-auto max-w-4xl animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-8">
             
             {/* Mobile Header (Back Button) */}
             <div className="md:hidden flex items-center gap-2 mb-4">
@@ -288,7 +299,7 @@ export default function SettingsPage() {
                           onClick={handleSave}
                           className="group relative flex items-center justify-center gap-2 rounded-full bg-white px-6 py-2.5 text-[13px] font-bold text-black transition-all hover:bg-zinc-200 hover:scale-105 active:scale-95 disabled:opacity-70"
                         >
-                           {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                           {saving ? <LucideLoader size={16} className="animate-spin" /> : <Save size={16} />}
                            {saving ? "Saving..." : "Save Changes"}
                         </button>
                     )}

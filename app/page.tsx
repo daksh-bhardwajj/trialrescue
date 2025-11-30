@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image"; // Added for logo replacement
 import { 
   ArrowRight, 
   Check, 
@@ -49,7 +50,6 @@ function useScrollAnimation() {
   return { ref, isVisible };
 }
 
-// Mouse position hook for spotlight effects
 function useMousePosition() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
@@ -81,7 +81,7 @@ function FadeIn({ children, delay = 0, className = "" }: { children: React.React
 
 function SectionBadge({ label }: { label: string }) {
   return (
-    <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 backdrop-blur-md shadow-[0_0_20px_rgba(255,255,255,0.05)]">
+    <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 backdrop-blur-md shadow-[0_0_25px_rgba(255,255,255,0.05)]">
       <span className="flex h-1.5 w-1.5 relative">
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75"></span>
         <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
@@ -92,6 +92,26 @@ function SectionBadge({ label }: { label: string }) {
     </div>
   );
 }
+
+function NavLogo() {
+  return (
+    <div className="flex items-center gap-2.5 mr-2 md:mr-6">
+      {/* --- LOGO REPLACEMENT INSTRUCTIONS --- 
+         1. Upload your logo to the /public folder (e.g. /public/logo.png)
+         2. Uncomment the Image component below
+         3. Comment out the 'Zap' icon div
+      */}
+      
+      { <Image src="/logo.png" alt="TrialRescue Logo" width={28} height={28} className="object-contain" /> }
+      
+      <span className="text-sm font-bold tracking-tight text-white hidden sm:inline-block">
+        TrialRescue
+      </span>
+    </div>
+  );
+}
+
+// --- Visualizations ---
 
 function InfiniteLogoTicker() {
     const logos = [
@@ -106,7 +126,7 @@ function InfiniteLogoTicker() {
                 {[...logos, ...logos].map((Logo, i) => (
                     <li key={i} className="flex items-center gap-2 opacity-30 grayscale transition-all hover:opacity-60 hover:grayscale-0">
                         <Logo.icon size={20} />
-                        <span className="font-bold text-lg tracking-tight">{Logo.name}</span>
+                        <span className="font-bold text-lg tracking-tight font-display">{Logo.name}</span>
                     </li>
                 ))}
             </ul>
@@ -114,15 +134,13 @@ function InfiniteLogoTicker() {
     )
 }
 
-// --- Complex Visualizations ---
-
 function HeroDashboard() {
   return (
     <div className="w-full h-full bg-[#080808] flex overflow-hidden rounded-xl relative select-none">
        {/* Sidebar */}
        <div className="hidden sm:flex w-14 border-r border-white/[0.06] flex-col items-center py-4 gap-6 bg-[#0a0a0a]">
-          <div className="h-8 w-8 rounded-lg bg-white text-black flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-             <Zap size={14} fill="currentColor" />
+          <div>
+             <Image src="/logo.png" alt="TrialRescue Logo" width={28} height={28} className="object-contain" />
           </div>
           <div className="flex flex-col gap-4 mt-4">
              <div className="p-2 rounded-lg bg-white/10 text-white"><LayoutDashboard size={16} /></div>
@@ -153,8 +171,7 @@ function HeroDashboard() {
           {/* Stats Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
              {/* Card 1 */}
-             <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 relative overflow-hidden group">
-                <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+             <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 relative overflow-hidden">
                 <div className="flex justify-between items-start mb-2">
                    <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wider">Drifting Users</span>
                    <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
@@ -206,7 +223,6 @@ function HeroDashboard() {
   )
 }
 
-// --- Pricing Card (The Obsidian Card) ---
 function PricingCard() {
     const divRef = useRef<HTMLDivElement>(null);
     const [isFocused, setIsFocused] = useState(false);
@@ -235,24 +251,23 @@ function PricingCard() {
           }}
         />
         
-        {/* Content */}
         <div className="relative z-10 flex flex-col h-full">
             <div className="mb-8 flex items-start justify-between">
                 <div>
                     <div className="flex items-center gap-2 mb-2">
                         <h3 className="text-lg font-bold text-white">Founder's Pass</h3>
                         <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-[9px] font-bold text-amber-400 uppercase tracking-wide">
-                            Limited
+                            Early Bird
                         </span>
                     </div>
-                    <p className="text-sm text-zinc-500">Everything you need to recover revenue.</p>
+                    <p className="text-sm text-zinc-500">Full revenue recovery suite.</p>
                 </div>
                 <div className="text-right">
                     <div className="flex items-baseline justify-end gap-1">
-                        <span className="text-4xl font-bold text-white tracking-tighter">$19</span>
-                        <span className="text-sm text-zinc-500 font-medium">/mo</span>
+                        <span className="text-4xl font-bold text-white tracking-tighter">$1.99</span>
+                        <span className="text-sm text-zinc-500 font-medium">/1st mo</span>
                     </div>
-                    <p className="text-[10px] text-zinc-600 mt-1">Locks for life</p>
+                    <p className="text-[10px] text-zinc-600 mt-1">Then $29.99/mo</p>
                 </div>
             </div>
 
@@ -263,7 +278,7 @@ function PricingCard() {
                     'Unlimited recovered users',
                     'Custom sender branding',
                     '3-stage smart nudge sequences',
-                    'Priority founder support',
+                    'Revenue attribution',
                     'Cancel anytime'
                 ].map((feat, i) => (
                     <div key={i} className="flex items-center gap-3 group">
@@ -286,12 +301,9 @@ function PricingCard() {
                 <div className="absolute inset-0 -z-10 bg-gradient-to-r from-zinc-100 via-zinc-300 to-zinc-100 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
             </Link>
 
-            <div className="mt-6 flex justify-center gap-4 opacity-50 grayscale hover:grayscale-0 hover:opacity-80 transition-all">
-                <div className="flex items-center gap-1.5 text-[10px] text-zinc-400">
-                    <ShieldCheck size={12} />
-                    <span>Secure Payment</span>
-                </div>
-            </div>
+            <p className="mt-4 text-center text-[10px] text-zinc-600">
+                Only 20 spots available at this price.
+            </p>
         </div>
       </div>
     );
@@ -320,7 +332,7 @@ function FaqItem({ question, answer }: { question: string, answer: string }) {
   );
 }
 
-// --- Main Page ---
+// --- Main Page Component ---
 
 export default function LandingPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -337,7 +349,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-[#020202] font-sans text-zinc-100 selection:bg-indigo-500/30 selection:text-white">
       
-      {/* --- Cinematic Ambient Lighting --- */}
+      {/* --- Ambient Lighting --- */}
       <div className="pointer-events-none fixed inset-0 z-0">
          <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 h-[600px] w-[80vw] rounded-full bg-indigo-600/[0.06] blur-[120px] opacity-60" />
          <div className="absolute bottom-0 left-0 h-[500px] w-[500px] rounded-full bg-blue-600/[0.02] blur-[150px]" />
@@ -346,16 +358,11 @@ export default function LandingPage() {
 
       <div className="relative z-10 flex min-h-screen flex-col">
         
-        {/* --- Floating Navigation --- */}
+        {/* --- Navigation --- */}
         <header className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-4 px-4 animate-in slide-in-from-top-4 duration-700 fade-in">
           <nav className="relative flex items-center gap-2 rounded-full border border-white/10 bg-[#050505]/80 p-1.5 pl-5 pr-2 backdrop-blur-xl shadow-2xl ring-1 ring-white/5">
             
-            <div className="flex items-center gap-2.5 mr-2 md:mr-6">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-white to-zinc-400 text-black shadow-lg shadow-white/10">
-                <Zap size={14} fill="currentColor" />
-              </div>
-              <span className="text-sm font-bold tracking-tight text-white hidden sm:inline-block">TrialRescue</span>
-            </div>
+            <NavLogo />
 
             {/* Desktop Menu */}
             <div className="hidden md:flex items-center">
@@ -421,7 +428,13 @@ export default function LandingPage() {
           
           {/* --- Hero Section --- */}
           <section className="relative pt-32 pb-16 md:pt-40 md:pb-24 px-6 overflow-hidden">
-            <div className="mx-auto max-w-7xl flex flex-col items-center text-center">
+            <div className="mx-auto max-w-[1200px] flex flex-col items-center text-center">
+              
+              <FadeIn delay={0}>
+                <div className="mb-8">
+                    <SectionBadge label="Automatic Revenue Recovery" />
+                </div>
+              </FadeIn>
 
               <FadeIn delay={100}>
                 <h1 className="mx-auto max-w-4xl text-5xl font-semibold tracking-tighter text-white md:text-7xl lg:text-8xl drop-shadow-2xl leading-[1.05]">
@@ -434,7 +447,7 @@ export default function LandingPage() {
 
               <FadeIn delay={200}>
                 <p className="mx-auto mt-8 max-w-2xl text-base md:text-lg leading-relaxed text-zinc-400 font-medium">
-                    Stop letting <span className="text-white">90% of your signups</span> churn silently. TrialRescue connects to your backend and sends intelligent, branded nudges ~ automatically turning cold leads into MRR.
+                    Stop letting <span className="text-white">90% of your signups</span> churn silently. TrialRescue connects to your backend and sends intelligent, branded nudges to inactive users.
                 </p>
               </FadeIn>
 
@@ -454,23 +467,23 @@ export default function LandingPage() {
                 </div>
               </FadeIn>
 
-              {/* Premium Dashboard Mockup */}
+              {/* Premium Dashboard Mockup (Mobile Responsive) */}
               <FadeIn delay={500} className="w-full flex justify-center perspective-[2000px]">
                 <div className="mt-20 relative w-full max-w-5xl group">
                     
-                    {/* The Container - Responsive Tilt (None on Mobile, 3D on Desktop) */}
-                    <div className="relative rounded-2xl border border-white/10 bg-[#0A0A0A] p-2 shadow-2xl shadow-indigo-500/10 transition-transform duration-1000 sm:[transform:rotateX(12deg)] sm:group-hover:[transform:rotateX(2deg)]">
+                    {/* The Container - Tilt removed on mobile for better UX */}
+                    <div className="relative rounded-2xl border border-white/10 bg-[#0A0A0A] p-2 shadow-2xl shadow-indigo-500/10 transition-transform duration-1000 transform-none md:[transform:rotateX(12deg)] md:group-hover:[transform:rotateX(2deg)]">
                         
                         {/* Glass Reflection */}
                         <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.08] to-transparent pointer-events-none z-20 rounded-2xl opacity-50" />
                         
                         {/* Inner Dashboard Component */}
-                        <div className="rounded-xl bg-[#050505] overflow-hidden aspect-[16/10] relative border border-white/5">
+                        <div className="rounded-xl bg-[#050505] overflow-hidden aspect-[9/10] md:aspect-[16/10] relative border border-white/5">
                             <HeroDashboard />
                         </div>
                     </div>
                     
-                    {/* Ambient Glow Under Dashboard */}
+                    {/* Ambient Glow */}
                     <div className="absolute -inset-4 bg-indigo-500/20 blur-[80px] -z-10 rounded-[100%] opacity-40 sm:opacity-60" />
                 </div>
               </FadeIn>
@@ -562,7 +575,7 @@ export default function LandingPage() {
                                 Branded emails go out automatically. "From" name is yours. "Reply-to" is yours.
                             </p>
                             <div className="mt-auto transform group-hover:scale-105 transition-transform duration-500">
-                                {/* Simplified Email Visual */}
+                                {/* Email Visual */}
                                 <div className="bg-zinc-900 rounded-xl border border-white/10 p-4 shadow-lg">
                                     <div className="flex gap-3 mb-3">
                                         <div className="h-8 w-8 rounded-full bg-white/10" />
@@ -644,7 +657,7 @@ export default function LandingPage() {
                    />
                    <FaqItem 
                       question="Do I need a credit card for the Early Bird?" 
-                      answer="Yes, it's a direct checkout link via our payment provider." 
+                      answer="Yes. The Early Bird is a paid founder plan: your first month is $1.99, then $29.99/mo after that. Payments run through our provider, and you can cancel anytime in a couple of clicks." 
                    />
                    <FaqItem 
                       question="Can I customize the email timing?" 
@@ -657,12 +670,8 @@ export default function LandingPage() {
           {/* --- Footer --- */}
           <footer className="border-t border-white/5 bg-black py-16 px-6">
              <div className="mx-auto max-w-6xl flex flex-col md:flex-row justify-between items-center gap-8 opacity-60 hover:opacity-100 transition-opacity">
-                 <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-zinc-900 flex items-center justify-center text-white border border-zinc-800">
-                       <Zap size={14} fill="currentColor" />
-                    </div>
-                    <span className="text-sm font-bold text-white">TrialRescue</span>
-                 </div>
+                 
+                 <NavLogo />
                  
                  <div className="flex gap-8 text-xs text-zinc-500 font-medium">
                     <a href="#" className="hover:text-white transition-colors">Privacy</a>

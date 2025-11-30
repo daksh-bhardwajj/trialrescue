@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 import { useCurrentProject } from "@/app/hooks/useCurrentProject";
@@ -22,8 +23,12 @@ import {
   Sparkles,
   Lock,
   CreditCard,
-  ArrowRight
+  User,
+  ArrowRight,
 } from "lucide-react";
+
+// --- Constants ---
+const DODO_CHECKOUT_URL = "https://test.checkout.dodopayments.com/buy/pdt_QfENHSfu1kRvmtdToiUng?quantity=1&redirect_url=https://www.trialrescue.vercel.app%2Fapp%2Fbilling%2Fsuccess";
 
 // --- Types ---
 type DashboardSummary = {
@@ -55,25 +60,23 @@ function NavItem({
   return (
     <Link
       href={href}
-      className={`group relative flex items-center gap-3.5 rounded-2xl px-4 py-3 text-[13px] font-medium transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+      className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-300 ease-out ${
         isActive
-          ? "bg-white/[0.08] text-white shadow-[0_0_20px_rgba(255,255,255,0.05)]"
+          ? "bg-white/[0.08] text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]"
           : "text-zinc-500 hover:bg-white/[0.03] hover:text-zinc-200"
       }`}
     >
-      {isActive && (
-        <div className="absolute left-0 h-6 w-1 rounded-r-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
-      )}
       <Icon
         size={18}
         strokeWidth={2}
-        className={`transition-transform duration-300 ${
-          isActive
-            ? "scale-110 text-white"
-            : "text-zinc-600 group-hover:scale-105 group-hover:text-zinc-400"
+        className={`transition-colors duration-300 ${
+          isActive ? "text-white" : "text-zinc-600 group-hover:text-zinc-400"
         }`}
       />
       <span className="relative z-10">{label}</span>
+      {isActive && (
+        <div className="absolute right-2 h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+      )}
     </Link>
   );
 }
@@ -95,36 +98,29 @@ function StatCard({
 }) {
   return (
     <div
-      className="group relative overflow-hidden rounded-[24px] border border-white/[0.06] bg-[#121212]/40 p-6 backdrop-blur-xl transition-all duration-500 ease-out hover:scale-[1.02] hover:bg-[#121212]/60 hover:shadow-2xl"
+      className="group relative overflow-hidden rounded-[24px] border border-white/[0.06] bg-[#0A0A0A] p-6 transition-all duration-500 hover:border-white/[0.1] hover:bg-[#0F0F0F] hover:shadow-2xl"
       style={{ animationDelay: `${index * 100}ms` }}
     >
-      {/* Dynamic Background Glow */}
-      <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/[0.02] blur-[50px] transition-all duration-700 group-hover:bg-white/[0.05]" />
-
       <div className="relative z-10 flex h-full flex-col justify-between gap-6">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/[0.05] bg-white/[0.05] text-zinc-400 shadow-inner transition-colors group-hover:text-white">
-              <Icon size={14} />
-            </div>
-            <span className="text-[13px] font-semibold text-zinc-400 transition-colors group-hover:text-zinc-200">
-              {label}
-            </span>
+        <div className="flex items-center justify-between">
+          <span className="text-[13px] font-medium text-zinc-400 group-hover:text-zinc-300 transition-colors">
+            {label}
+          </span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.03] border border-white/[0.05] text-zinc-500 group-hover:text-white transition-colors">
+            <Icon size={14} />
           </div>
         </div>
 
         <div>
           {loading ? (
-            <div className="h-9 w-24 animate-pulse rounded-lg bg-white/[0.08]" />
+            <div className="h-8 w-24 animate-pulse rounded-md bg-white/[0.05]" />
           ) : (
-            <div className="flex items-baseline gap-1">
-              <div className="text-4xl font-bold tracking-tight text-white drop-shadow-sm">
-                {value}
-              </div>
+            <div className="text-4xl font-bold tracking-tight text-white">
+              {value}
             </div>
           )}
           {helper && (
-            <div className="mt-2 text-[12px] font-medium leading-relaxed text-zinc-600 transition-colors group-hover:text-zinc-500">
+            <div className="mt-2 text-[11px] font-medium text-zinc-600 group-hover:text-zinc-500 transition-colors">
               {helper}
             </div>
           )}
@@ -153,7 +149,7 @@ function ChecklistItem({
         <div className="absolute left-[11px] top-8 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent" />
       )}
       <div className="relative shrink-0">
-        <div className="flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-black/50 text-[10px] font-bold text-zinc-500 shadow-[0_0_15px_rgba(0,0,0,0.5)] backdrop-blur-md transition-all duration-300 group-hover:scale-110 group-hover:border-emerald-500/50 group-hover:text-emerald-400 group-hover:shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+        <div className="flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-black text-[10px] font-bold text-zinc-500 shadow-inner transition-all duration-300 group-hover:border-emerald-500/50 group-hover:text-emerald-400 group-hover:scale-110">
           {step}
         </div>
       </div>
@@ -164,7 +160,7 @@ function ChecklistItem({
         {link && (
           <Link
             href={href || "#"}
-            className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-blue-400 transition-all hover:translate-x-1 hover:text-blue-300"
+            className="mt-1 inline-flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 transition-colors"
           >
             {link} <ArrowUpRight size={10} />
           </Link>
@@ -184,36 +180,33 @@ function PaidDashboard({
   loadingSummary: boolean;
 }) {
   return (
-    <div className="mx-auto max-w-6xl animate-in slide-in-from-bottom-8 fade-in duration-700">
+    <div className="mx-auto max-w-6xl animate-in fade-in slide-in-from-bottom-8 duration-700">
       {/* Top Bar */}
-      <header className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-center">
+      <header className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end border-b border-white/[0.06] pb-8">
         <div>
           <div className="mb-2 flex items-center gap-2">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
             </span>
-            <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">
-              System Online
+            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+              Operational
             </span>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-white drop-shadow-lg">
-            Dashboard
+          <h1 className="text-3xl font-bold tracking-tight text-white">
+            Performance
           </h1>
         </div>
 
         <Link
           href="/integration"
-          className="group relative flex items-center gap-2 overflow-hidden rounded-full bg-white px-6 py-2.5 text-[13px] font-bold text-black shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-transform hover:scale-105 active:scale-95"
+          className="group flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-5 py-2 text-[12px] font-medium text-zinc-200 transition-all hover:bg-white/[0.08] active:scale-95"
         >
-          <span className="relative z-10 flex items-center gap-2">
-            Integration Guide
-            <ChevronRight
-              size={14}
-              className="transition-transform group-hover:translate-x-1"
-            />
-          </span>
-          <div className="absolute inset-0 -z-0 bg-gradient-to-r from-zinc-200 to-white opacity-0 transition-opacity group-hover:opacity-100" />
+          Integration Guide
+          <ChevronRight
+            size={14}
+            className="text-zinc-500 transition-transform group-hover:translate-x-0.5 group-hover:text-white"
+          />
         </Link>
       </header>
 
@@ -222,57 +215,51 @@ function PaidDashboard({
         <StatCard
           index={1}
           icon={Users}
-          label="New Trials"
+          label="Total Trials"
           value={String(summary?.trials_last_30 ?? 0)}
           loading={loadingSummary}
-          helper="Last 30 days activity"
+          helper="Signups detected via API"
         />
         <StatCard
           index={2}
           icon={Activity}
-          label="Users Nudged"
+          label="Nudges Sent"
           value={String(summary?.nudged_users ?? 0)}
           loading={loadingSummary}
-          helper="Engagement emails sent"
+          helper="Automated engagement emails"
         />
         <StatCard
           index={3}
           icon={BarChart3}
-          label="Rescued"
+          label="Recovered"
           value={String(summary?.upgrades_from_rescued ?? 0)}
           loading={loadingSummary}
-          helper="Recovered revenue conversions"
+          helper="Users converted after nudge"
         />
       </section>
 
-      {/* Bottom Section: Checklist & Info */}
+      {/* Bottom Section */}
       <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-        {/* Setup Checklist */}
-        <div className="rounded-[32px] border border-white/[0.06] bg-[#121212]/40 p-8 backdrop-blur-xl">
-          <div className="mb-6 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/[0.05] text-white">
-                <CheckCircle2 size={20} />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-white">
-                  Quick Setup
-                </h3>
-                <p className="text-[12px] text-zinc-500">
-                  Complete these steps to activate automation
-                </p>
-              </div>
+        <div className="rounded-[24px] border border-white/[0.06] bg-[#0A0A0A] p-8">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.05] text-white border border-white/[0.05]">
+              <CheckCircle2 size={16} />
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">
-              0% Complete
-            </span>
+            <div>
+              <h3 className="text-sm font-semibold text-white">
+                Integration Status
+              </h3>
+              <p className="text-[11px] text-zinc-500">
+                Setup steps to reach 100% automation.
+              </p>
+            </div>
           </div>
 
-          <div className="pl-2">
+          <div className="pl-1">
             <ChecklistItem
               step={1}
               title="Send a test event from your backend"
-              link="Read Documentation"
+              link="Documentation"
               href="/integration"
             />
             <ChecklistItem
@@ -281,39 +268,37 @@ function PaidDashboard({
             />
             <ChecklistItem
               step={3}
-              title="Analyze incoming stats for 24-48 hours"
+              title="Monitor incoming traffic for 24 hours"
               isLast
             />
           </div>
         </div>
 
-        {/* Hint Card */}
-        <div className="relative overflow-hidden rounded-[32px] border border-white/[0.06] bg-gradient-to-br from-blue-900/20 to-purple-900/20 p-8 backdrop-blur-xl">
+        <div className="relative overflow-hidden rounded-[24px] border border-white/[0.06] bg-[#0A0A0A] p-8">
+          <div className="absolute top-0 right-0 p-8 opacity-10">
+             <Sparkles size={120} className="text-white" />
+          </div>
           <div className="relative z-10 flex h-full flex-col justify-between">
             <div>
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-200">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-300 border border-white/5">
                 Pro Tip
               </div>
-              <h3 className="text-xl font-semibold text-white leading-tight">
-                Recovery works best when automated.
+              <h3 className="text-lg font-semibold text-white leading-snug">
+                Recovery works best on autopilot.
               </h3>
-              <p className="mt-3 text-[13px] text-zinc-400 leading-relaxed">
-                TrialRescue automatically filters out users who have upgraded,
-                so you never spam paying customers.
+              <p className="mt-3 text-[12px] text-zinc-500 leading-relaxed">
+                We automatically filter out users who have upgraded, ensuring you never spam your paying customers.
               </p>
             </div>
             <div className="mt-8">
               <Link
                 href="/settings"
-                className="text-[13px] font-medium text-white underline-offset-4 hover:underline decoration-white/30"
+                className="text-[12px] font-medium text-white underline decoration-zinc-700 underline-offset-4 hover:decoration-white transition-all"
               >
                 Configure Rules &rarr;
               </Link>
             </div>
           </div>
-
-          {/* Decorative Blob */}
-          <div className="absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-blue-500/20 blur-[80px]" />
         </div>
       </div>
     </div>
@@ -323,14 +308,14 @@ function PaidDashboard({
 export default function Page() {
   const router = useRouter();
   const pathname = usePathname();
-  const { projectId, loading: loadingProject, error: projectError } =
-    useCurrentProject();
+  const { projectId, loading: loadingProject, error: projectError } = useCurrentProject();
 
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loadingSummary, setLoadingSummary] = useState(true);
 
   const [billing, setBilling] = useState<BillingInfo | null>(null);
   const [loadingBilling, setLoadingBilling] = useState(true);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   async function handleLogout() {
     try {
@@ -340,6 +325,15 @@ export default function Page() {
       console.error("Error signing out", err);
     }
   }
+
+  // Fetch User Email
+  useEffect(() => {
+    async function getUser() {
+      const { data: { user } } = await supabaseBrowser.auth.getUser();
+      if (user?.email) setUserEmail(user.email);
+    }
+    getUser();
+  }, []);
 
   useEffect(() => {
     if (!projectId) return;
@@ -382,77 +376,48 @@ export default function Page() {
     loadBilling();
   }, [projectId]);
 
-  // Inside Page component, after existing hooks:
-useEffect(() => {
-  async function ensureOwnerEmail() {
-    if (!projectId) return;
+  // Ensure owner email is set
+  useEffect(() => {
+    async function ensureOwnerEmail() {
+      if (!projectId) return;
+      const { data: { user }, error } = await supabaseBrowser.auth.getUser();
+      if (error || !user?.email) return;
 
-    // get current authenticated user
-    const {
-      data: { user },
-      error,
-    } = await supabaseBrowser.auth.getUser();
-
-    if (error || !user?.email) {
-      console.log("No user email available for owner_email patch", error);
-      return;
+      try {
+        await fetch("/api/internal/project/owner-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ project_id: projectId, email: user.email }),
+        });
+      } catch (e) {
+        console.error("Failed to ensure owner_email", e);
+      }
     }
+    ensureOwnerEmail();
+  }, [projectId]);
 
-    try {
-      await fetch("/api/internal/project/owner-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          project_id: projectId,
-          email: user.email,
-        }),
-      });
-    } catch (e) {
-      console.error("Failed to ensure owner_email", e);
-    }
-  }
-
-  ensureOwnerEmail();
-}, [projectId]);
-
-
-  // --- iOS Style Loading State ---
+  // --- High-End Loading Screen (Custom Logo) ---
   if (loadingProject || loadingBilling) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black">
-        <div className="relative flex flex-col items-center justify-center">
-          {/* Pulsing Aura */}
-          <div className="absolute inset-0 -z-10 animate-ping rounded-full bg-white/5 opacity-20 duration-1000" />
-
-          <div className="relative flex h-20 w-20 items-center justify-center rounded-[2rem] bg-gradient-to-tr from-zinc-800 to-zinc-900 shadow-[0_0_40px_-10px_rgba(255,255,255,0.1)] ring-1 ring-white/10">
-            <Zap size={32} className="animate-pulse text-white fill-white" />
-          </div>
-
-          <div className="mt-8 flex flex-col items-center gap-2">
-            <h2 className="text-lg font-medium tracking-tight text-white">
-              TrialRescue
-            </h2>
-            <div className="h-1 w-24 overflow-hidden rounded-full bg-zinc-900">
-              <div className="h-full w-full origin-left animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-            </div>
-          </div>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#000000]">
+        <div className="flex flex-col items-center gap-6">
+           <div className="relative h-16 w-16 animate-pulse">
+             <Image src="/logo.png" alt="TrialRescue" fill className="object-contain opacity-80" />
+           </div>
+           </div>
         </div>
-      </div>
     );
   }
 
+  // --- Error State ---
   if (projectError || !projectId) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-zinc-400">
         <div className="flex flex-col items-center gap-4 rounded-3xl border border-white/10 bg-zinc-900/50 p-8 backdrop-blur-xl">
           <div className="rounded-full bg-red-500/10 p-3 text-red-400">
-            <LogOut size={20} />
+            <Lock size={20} />
           </div>
-          <p className="text-sm font-medium">
-            {projectError || "Session expired."}
-          </p>
+          <p className="text-sm font-medium">Authentication required.</p>
           <button
             onClick={() => router.push("/auth")}
             className="text-xs text-white underline decoration-zinc-600 underline-offset-4"
@@ -469,42 +434,43 @@ useEffect(() => {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-black font-sans text-zinc-100 selection:bg-white/20">
-      {/* Ambient Background */}
-      <div className="pointer-events-none fixed inset-0 z-0">
-        <div className="absolute left-[-10%] top-[-20%] h-[600px] w-[600px] rounded-full bg-white/[0.03] blur-[120px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] h-[500px] w-[500px] rounded-full bg-blue-500/[0.02] blur-[120px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay" />
-      </div>
-
+      
       {/* Sidebar - "Floating Dock" Style */}
-      <aside className="relative z-20 hidden w-[280px] flex-col p-4 md:flex">
-        <div className="flex h-full flex-col justify-between rounded-[32px] border border-white/[0.06] bg-[#0A0A0A]/60 px-4 py-6 backdrop-blur-2xl shadow-2xl">
+      <aside className="relative z-20 hidden w-[260px] flex-col p-4 md:flex">
+        <div className="flex h-full flex-col justify-between rounded-[24px] border border-white/[0.08] bg-[#050505] px-4 py-6 shadow-2xl">
+          
+          {/* Top Section */}
           <div className="space-y-8">
             {/* Brand */}
-            <div className="flex items-center gap-4 px-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-white to-zinc-400 text-black shadow-lg shadow-white/10">
-                <Zap size={20} fill="currentColor" />
+            <div className="flex items-center gap-3 px-2">
+              <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-white p-1 text-black shadow-lg shadow-white/20">
+                <Image
+                  src="/logo.png"
+                  alt="TrialRescue"
+                  fill
+                  className="object-contain"
+                />
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-bold tracking-tight text-white">
                   TrialRescue
                 </span>
-                <span className="text-[10px] font-medium text-zinc-500">
-                  {isActive ? "Early Bird · Active" : "Free · Locked"}
+                <span className={`text-[10px] font-medium ${isActive ? "text-emerald-400" : "text-zinc-500"}`}>
+                  {isActive ? "Pro Workspace" : "Free Plan"}
                 </span>
               </div>
             </div>
 
             {/* Nav */}
             <nav className="space-y-1">
-              <div className="px-4 pb-2 text-[10px] font-bold uppercase tracking-widest text-zinc-600">
-                Menu
+              <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-widest text-zinc-600">
+                Platform
               </div>
               <NavItem
                 href="/"
                 icon={LayoutDashboard}
                 label="Overview"
-                isActive={pathname === "/app"}
+                isActive={pathname === "/"}
               />
               <NavItem
                 href="/integration"
@@ -527,13 +493,26 @@ useEffect(() => {
             </nav>
           </div>
 
-          {/* Footer */}
-          <div>
-            <button
+          {/* Bottom Section: User & Logout */}
+          <div className="border-t border-white/[0.06] pt-4">
+             {/* User Profile */}
+             <div className="mb-3 flex items-center gap-3 rounded-xl bg-white/[0.03] p-3 border border-white/[0.02]">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-zinc-400">
+                   <User size={14} />
+                </div>
+                <div className="flex flex-col overflow-hidden">
+                   <span className="truncate text-[11px] font-medium text-zinc-200">
+                     {userEmail || "Loading..."}
+                   </span>
+                   <span className="text-[10px] text-zinc-500">Administrator</span>
+                </div>
+             </div>
+
+             <button
               onClick={handleLogout}
-              className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-[13px] font-medium text-zinc-500 transition-colors hover:bg-red-500/10 hover:text-red-400"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-[12px] font-medium text-zinc-500 transition-colors hover:bg-red-500/10 hover:text-red-400"
             >
-              <LogOut size={18} />
+              <LogOut size={16} />
               Sign out
             </button>
           </div>
@@ -541,30 +520,44 @@ useEffect(() => {
       </aside>
 
       {/* Main Content Area */}
-      <main className="relative z-10 flex-1 overflow-y-auto scroll-smooth p-4 md:p-6">
+      <main className="relative z-10 flex-1 overflow-y-auto scroll-smooth p-4 md:p-6 bg-[#000000]">
+        
+        {/* Mobile Nav Toggle Placeholder (Hidden on Desktop) */}
+        <div className="md:hidden mb-6 flex justify-between items-center">
+              <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-white p-1 text-black shadow-lg shadow-white/20">
+                <Image
+                  src="/logo.png"
+                  alt="TrialRescue Logo"
+                  fill
+                  className="object-contain"
+                />
+             <span className="font-bold text-white">TrialRescue</span>
+           </div>
+           {/* Add Mobile Menu Logic Here if needed */}
+        </div>
+
         {isActive ? (
           <PaidDashboard summary={summary} loadingSummary={loadingSummary} />
         ) : (
-          <div className="mx-auto max-w-4xl animate-in slide-in-from-bottom-8 fade-in duration-700">
-            {/* Header Lock State */}
-            <div className="mb-10 flex items-end justify-between border-b border-white/[0.06] pb-8">
+          <div className="mx-auto max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Locked State Header */}
+            <div className="mb-8 flex items-end justify-between border-b border-white/[0.06] pb-8">
                 <div>
-                    <div className="flex items-center gap-2 mb-2">
-                        <span className="flex h-2 w-2 relative">
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
-                            <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500"></span>
-                        </span>
+                    <div className="flex items-center gap-2 mb-3">
+                        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                           <Lock size={10} />
+                        </div>
                         <span className="text-[11px] font-bold uppercase tracking-widest text-amber-500">Trial Mode</span>
                     </div>
-                    <h1 className="text-3xl font-bold tracking-tight text-white drop-shadow-md">Activate TrialRescue</h1>
+                    <h1 className="text-3xl font-bold tracking-tight text-white">Activate Workspace</h1>
                     <p className="mt-2 text-[13px] text-zinc-400 max-w-lg leading-relaxed">
-                        Your workspace is initialized but restricted. Unlock full automation capabilities to start recovering revenue.
+                        Your account is initialized but restricted. Upgrade to unlock the automation engine and start recovering lost revenue.
                     </p>
                 </div>
                 
                 <Link
                     href="/billing"
-                    className="group hidden md:flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-[13px] font-bold text-black shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all hover:scale-105 active:scale-95"
+                    className="hidden md:flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-[12px] font-bold text-black shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-transform hover:scale-105 active:scale-95"
                 >
                     <Sparkles size={14} className="text-amber-600 fill-amber-600" />
                     Unlock Pro
@@ -573,23 +566,24 @@ useEffect(() => {
 
             <div className="grid gap-6 md:grid-cols-[1.6fr_1fr]">
               {/* Pricing Card */}
-              <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[#0A0A0A] p-8 shadow-2xl">
-                 <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
-                 
-                 <div className="flex justify-between items-start mb-8">
+              <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[#050505] p-8 shadow-2xl">
+                  <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
+                  
+                  <div className="flex justify-between items-start mb-8">
                     <div>
-                       <div className="inline-flex items-center px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 uppercase tracking-wide mb-2">
+                        <div className="inline-flex items-center px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 uppercase tracking-wide mb-2">
                           Early Bird
-                       </div>
-                       <h2 className="text-xl font-bold text-white">Founder's Pass</h2>
+                        </div>
+                        <h2 className="text-xl font-bold text-white">Founder's Pass</h2>
                     </div>
                     <div className="text-right">
-                       <span className="text-4xl font-bold text-white tracking-tighter">$19</span>
-                       <span className="text-zinc-500 text-sm font-medium">/mo</span>
+                        <span className="text-4xl font-bold text-white tracking-tighter">$1.99</span>
+                        <span className="text-zinc-500 text-sm font-medium">/1st mo</span>
+                        <p className="text-[10px] text-zinc-600 mt-1">Then $29.99/mo</p>
                     </div>
-                 </div>
+                  </div>
 
-                 <div className="space-y-4 mb-8">
+                  <div className="space-y-4 mb-8">
                     {[
                         'Unlimited recovered users',
                         'Custom branding & domains',
@@ -603,31 +597,25 @@ useEffect(() => {
                             <span className="text-sm text-zinc-300 font-medium">{feat}</span>
                         </div>
                     ))}
-                 </div>
+                  </div>
 
-                 <Link
+                  <Link
                     href="/billing"
                     className="flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-3.5 text-sm font-bold text-black transition-transform hover:scale-[1.02] active:scale-[0.98]"
-                 >
+                  >
                     Upgrade Now
                     <ArrowRight size={14} />
-                 </Link>
-                 
-                 <p className="mt-4 text-center text-[10px] text-zinc-500">
+                  </Link>
+                  
+                  <p className="mt-4 text-center text-[10px] text-zinc-500">
                     One-time setup. Cancel anytime.
-                 </p>
+                  </p>
               </div>
 
-              {/* Status & Next Steps */}
+              {/* Status & Resources */}
               <div className="space-y-4">
-                 {/* Current Status Card */}
-                 <div className="rounded-[24px] border border-white/10 bg-[#121212]/40 p-6 backdrop-blur-xl">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="h-8 w-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-400">
-                            <Lock size={16} />
-                        </div>
-                        <h3 className="text-sm font-bold text-white">Current Limits</h3>
-                    </div>
+                  <div className="rounded-[24px] border border-white/10 bg-[#0A0A0A] p-6">
+                    <h3 className="text-sm font-bold text-white mb-4">Current Limits</h3>
                     <ul className="space-y-3">
                         <li className="flex items-center justify-between text-[12px]">
                             <span className="text-zinc-400">Integration</span>
@@ -639,15 +627,14 @@ useEffect(() => {
                         </li>
                         <li className="flex items-center justify-between text-[12px]">
                             <span className="text-zinc-400">Live Nudges</span>
-                            <span className="text-red-400 font-medium flex items-center gap-1">
-                                <Lock size={10} /> Paused
+                            <span className="text-zinc-600 font-medium flex items-center gap-1">
+                                <Lock size={10} /> Locked
                             </span>
                         </li>
                     </ul>
-                 </div>
+                  </div>
 
-                 {/* Documentation Links */}
-                 <div className="rounded-[24px] border border-white/10 bg-[#121212]/40 p-6 backdrop-blur-xl">
+                  <div className="rounded-[24px] border border-white/10 bg-[#0A0A0A] p-6">
                     <h3 className="text-sm font-bold text-white mb-4">Resources</h3>
                     <div className="space-y-2">
                         <Link href="/integration" className="block w-full text-left px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] text-zinc-300 transition-colors">
@@ -657,7 +644,7 @@ useEffect(() => {
                             Configure Branding
                         </Link>
                     </div>
-                 </div>
+                  </div>
               </div>
             </div>
           </div>
